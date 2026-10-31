@@ -3,19 +3,23 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "next dev --webpack",
+    "build": "next build --webpack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "postinstall": "node scripts/patch-next.js"
   },
   "dependencies": {
+    "@appwrite.io/react": "^0.1.1",
     "@base-ui/react": "^1.9.0",
+    "@tanstack/react-query": "^5.105.0",
+    "appwrite": "^25.2.0",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.5.1",
     "lucide-react": "^1.65.0",
     "motion": "^14.9.0",
     "next": "16.4.3",
-    "node-appwrite": "^31.1.0",
+    "node-appwrite": "^26.2.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "shadcn": "^4.23.0",
@@ -23,6 +27,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
