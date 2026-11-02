@@ -25,7 +25,7 @@ export function ProductTable({
   return (
     <div className="w-full bg-white border border-zinc-200/80 rounded-2xl shadow-xs overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs">
+        <table className="w-full min-w-[640px] text-left text-xs">
           <thead>
             <tr className="border-b border-zinc-100 bg-zinc-50/70 text-zinc-500 font-semibold uppercase tracking-wider text-[11px]">
               <th className="py-3.5 pl-5 pr-4">Produto</th>

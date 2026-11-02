@@ -328,8 +328,8 @@ export function ProductDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[88vh] overflow-hidden flex flex-col p-0">
         {/* Header */}
-        <div className="px-6 pt-6 pb-4 border-b border-zinc-100 shrink-0">
-          <DialogTitle className="text-xl font-bold text-zinc-900">
+        <div className="px-4 sm:px-6 pt-5 sm:pt-6 pb-3.5 sm:pb-4 border-b border-zinc-100 shrink-0">
+          <DialogTitle className="text-lg sm:text-xl font-bold text-zinc-900">
             {productToEdit ? 'Editar Produto' : 'Novo Produto'}
           </DialogTitle>
           <p className="text-xs text-zinc-500 mt-1">
@@ -338,7 +338,7 @@ export function ProductDialog({
         </div>
 
         {/* Scrollable Form Body */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-5 space-y-4 sm:space-y-5">
           {errorMsg && (
             <div className="rounded-xl bg-red-50 border border-red-200/80 p-3 text-xs text-red-700">
               {errorMsg}
@@ -616,9 +616,9 @@ export function ProductDialog({
                     value={addon.name}
                     onChange={(e) => handleUpdateAddonName(index, e.target.value)}
                     placeholder="Ex: Bacon Extra"
-                    className="h-9 flex-1 rounded-lg border border-zinc-200 bg-white px-3 text-xs text-zinc-900 outline-none focus:border-amber-500"
+                    className="h-9 flex-1 min-w-0 rounded-lg border border-zinc-200 bg-white px-3 text-xs text-zinc-900 outline-none focus:border-amber-500"
                   />
-                  <div className="relative w-28 shrink-0">
+                  <div className="relative w-24 sm:w-28 shrink-0">
                     <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] font-semibold text-zinc-400">
                       R$
                     </span>
@@ -633,7 +633,7 @@ export function ProductDialog({
                   <button
                     type="button"
                     onClick={() => handleRemoveAddon(index)}
-                    className="p-1.5 text-zinc-400 hover:text-red-500 rounded-lg hover:bg-zinc-100 transition-colors"
+                    className="p-1.5 shrink-0 text-zinc-400 hover:text-red-500 rounded-lg hover:bg-zinc-100 transition-colors"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -745,13 +745,13 @@ export function ProductDialog({
         </form>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-zinc-100 flex items-center justify-end gap-3 shrink-0 bg-zinc-50/50">
+        <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-t border-zinc-100 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 sm:gap-3 shrink-0 bg-zinc-50/50">
           <Button
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isSubmitting}
-            className="rounded-full text-xs font-medium px-5 h-9"
+            className="w-full sm:w-auto justify-center rounded-full text-xs font-medium px-5 h-9"
           >
             Cancelar
           </Button>
@@ -759,7 +759,7 @@ export function ProductDialog({
             type="button"
             onClick={handleSubmit}
             disabled={isSubmitting || isUploadingImage}
-            className="rounded-full bg-amber-500 hover:bg-amber-600 text-white font-medium text-xs px-6 h-9 gap-2 shadow-xs transition-transform active:scale-95"
+            className="w-full sm:w-auto justify-center rounded-full bg-amber-500 hover:bg-amber-600 text-white font-medium text-xs px-6 h-9 gap-2 shadow-xs transition-transform active:scale-95"
           >
             {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
             {productToEdit ? 'Atualizar Produto' : 'Cadastrar Produto'}

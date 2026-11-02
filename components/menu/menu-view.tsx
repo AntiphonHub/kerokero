@@ -155,7 +155,7 @@ export function MenuView({ initialProducts, initialCategories }: MenuViewProps) 
     <div className="space-y-6">
       {/* Header do Cardápio */}
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900">
           Cardápio & Produtos
         </h1>
         <p className="text-xs text-zinc-500">
