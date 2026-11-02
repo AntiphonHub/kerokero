@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { connection } from 'next/server';
 import { getLoggedInUser } from '@/lib/appwrite/session';
 
 export const metadata: Metadata = {
@@ -9,6 +10,7 @@ export const metadata: Metadata = {
 export const instant = false;
 
 export default async function DashboardPage() {
+  await connection();
   const user = await getLoggedInUser();
 
   return (

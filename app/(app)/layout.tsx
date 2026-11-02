@@ -1,6 +1,9 @@
 import { redirect } from 'next/navigation';
+import { connection } from 'next/server';
 import { getSession, getLoggedInUser } from '@/lib/appwrite/session';
-import { AppHeader } from '@/components/app-header';
+import { getEstablishmentByUserId } from '@/lib/appwrite/establishments';
+import { evaluateUserAccess } from '@/lib/auth/access-gate';
+import { MerchantSidebar } from '@/components/merchant-sidebar';
 
 export const instant = false;
 
@@ -9,20 +12,35 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
+  await connection();
   const session = await getSession();
   if (!session) {
     redirect('/login');
   }
 
   const user = await getLoggedInUser();
+  const establishment = user ? await getEstablishmentByUserId(user.$id) : null;
+
+  const decision = evaluateUserAccess({
+    isAuthenticated: true,
+    establishment,
+    pathname: '/dashboard',
+  });
+
+  if (!decision.allowed && decision.redirectTo) {
+    redirect(decision.redirectTo);
+  }
 
   return (
-    <div className="min-h-screen bg-zinc-50 text-zinc-900 flex flex-col">
-      <AppHeader
-        initialUserEmail={user?.email}
-        initialUserName={user?.name}
+    <div className="min-h-screen bg-[#F4F4F5] text-zinc-900 flex flex-row overflow-x-hidden">
+      {/* Sidebar Flutuante com margem e cantos arredondados */}
+      <MerchantSidebar
+        establishmentName={establishment?.name}
+        tablesCount={establishment?.tablesCount}
       />
-      <main className="flex-1 w-full max-w-7xl mx-auto p-6 md:p-8">
+
+      {/* Conteúdo Principal da Aplicação ocupando toda a largura */}
+      <main className="flex-1 min-w-0 min-h-screen p-4 md:p-6 lg:p-8 overflow-y-auto">
         {children}
       </main>
     </div>

@@ -5,5 +5,8 @@ export const appwriteConfig = {
   databaseId: process.env.APPWRITE_DATABASE_ID || 'kerokero',
   collections: {
     profiles: process.env.APPWRITE_PROFILES_COLLECTION_ID || 'profiles',
+    establishments: process.env.APPWRITE_ESTABLISHMENTS_COLLECTION_ID || 'establishments',
+    products: process.env.APPWRITE_PRODUCTS_COLLECTION_ID || 'products',
+    categories: process.env.APPWRITE_CATEGORIES_COLLECTION_ID || 'categories',
   },
 } as const;

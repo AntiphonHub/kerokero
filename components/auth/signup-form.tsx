@@ -4,11 +4,13 @@ import { useState, type FormEvent } from 'react';
 import { useAuth } from '@appwrite.io/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { motion } from 'motion/react';
 import { Input } from '@/components/ui/input';
 import { MaskedInput } from '@/components/ui/masked-input';
 import { maskPhone, maskCpf } from '@/lib/masks';
 import { signup } from '@/actions/auth';
 import { signupSchema } from '@/lib/schemas/auth';
+import { containerVariants, itemVariants } from '@/lib/motion';
 
 export function SignupForm() {
   const { signIn } = useAuth();
@@ -58,6 +60,9 @@ export function SignupForm() {
       const result = await signup(undefined, formData);
       if (result?.errors) {
         setErrors(result.errors);
+        if (result.message) {
+          setErrorMessage(result.message);
+        }
         setIsPending(false);
         return;
       }
@@ -87,32 +92,42 @@ export function SignupForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
-      <Input
-        name="name"
-        type="text"
-        label="Nome completo"
-        placeholder="Seu nome completo"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        required
-        autoComplete="name"
-        error={errors.name?.[0]}
-      />
+    <motion.form
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      onSubmit={handleSubmit}
+      className="flex flex-col gap-3.5"
+    >
+      <motion.div variants={itemVariants}>
+        <Input
+          name="name"
+          type="text"
+          label="Nome completo"
+          placeholder="Seu nome completo"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+          autoComplete="name"
+          error={errors.name?.[0]}
+        />
+      </motion.div>
 
-      <Input
-        name="email"
-        type="email"
-        label="E-mail"
-        placeholder="seu@email.com"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        required
-        autoComplete="email"
-        error={errors.email?.[0]}
-      />
+      <motion.div variants={itemVariants}>
+        <Input
+          name="email"
+          type="email"
+          label="E-mail"
+          placeholder="seu@email.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          autoComplete="email"
+          error={errors.email?.[0]}
+        />
+      </motion.div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <motion.div variants={itemVariants} className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <MaskedInput
           name="phone"
           type="tel"
@@ -136,9 +151,9 @@ export function SignupForm() {
           mask={maskCpf}
           error={errors.cpf?.[0]}
         />
-      </div>
+      </motion.div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <motion.div variants={itemVariants} className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Input
           name="password"
           type="password"
@@ -161,23 +176,28 @@ export function SignupForm() {
           autoComplete="new-password"
           error={errors.passwordConfirm?.[0]}
         />
-      </div>
+      </motion.div>
 
       {errorMessage && (
-        <p className="text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg p-2.5">
+        <motion.p
+          variants={itemVariants}
+          className="text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg p-2.5"
+        >
           {errorMessage}
-        </p>
+        </motion.p>
       )}
 
-      <button
-        type="submit"
-        disabled={isPending}
-        className="btn-primary mt-2"
-      >
-        {isPending ? 'Criando conta...' : 'Criar conta'}
-      </button>
+      <motion.div variants={itemVariants}>
+        <button
+          type="submit"
+          disabled={isPending}
+          className="btn-primary mt-2 w-full"
+        >
+          {isPending ? 'Criando conta...' : 'Criar conta'}
+        </button>
+      </motion.div>
 
-      <p className="text-center text-[13.5px] text-zinc-500">
+      <motion.p variants={itemVariants} className="text-center text-[13.5px] text-zinc-500">
         Já possui uma conta?{' '}
         <Link
           href="/login"
@@ -185,7 +205,7 @@ export function SignupForm() {
         >
           Entrar
         </Link>
-      </p>
-    </form>
+      </motion.p>
+    </motion.form>
   );
 }

@@ -7,13 +7,16 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
+    "test": "vitest run",
     "postinstall": "node scripts/patch-next.js"
   },
   "dependencies": {
     "@appwrite.io/react": "^0.1.1",
+    "@aws-sdk/client-s3": "^3.1161.0",
     "@base-ui/react": "^1.9.0",
     "@tanstack/react-query": "^5.105.0",
     "appwrite": "^25.2.0",
+    "canvas-confetti": "^1.9.4",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.5.1",
     "lucide-react": "^1.65.0",
@@ -29,12 +32,14 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",
     "@tailwindcss/turbopack": "^4",
+    "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.3",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.7"
   }
 }

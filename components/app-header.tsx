@@ -2,7 +2,6 @@
 
 import { useAuth } from '@appwrite.io/react';
 import { useRouter } from 'next/navigation';
-import { Brand } from '@/components/brand';
 
 interface AppHeaderProps {
   initialUserEmail?: string;
@@ -26,25 +25,27 @@ export function AppHeader({ initialUserEmail, initialUserName }: AppHeaderProps)
   };
 
   return (
-    <header className="h-16 border-b border-zinc-200 bg-white px-6 flex items-center justify-between sticky top-0 z-30">
-      <div className="flex items-center gap-6">
-        <Brand />
-        <span className="text-xs font-semibold uppercase tracking-wider text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
+    <header className="h-16 mx-3 mt-3 px-6 rounded-2xl bg-white border border-zinc-200/80 shadow-xs flex items-center justify-between z-20">
+      <div className="flex items-center gap-3">
+        <span className="text-xs font-semibold uppercase tracking-wider text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200/80">
           Painel Lojista
+        </span>
+        <span className="text-xs text-zinc-600 hidden sm:inline">
+          Operação em tempo real
         </span>
       </div>
 
       <div className="flex items-center gap-4">
         <div className="text-right hidden sm:block">
-          <p className="text-sm font-semibold text-zinc-900 leading-tight">{displayName}</p>
+          <p className="text-xs font-semibold text-zinc-900 leading-tight">{displayName}</p>
           {displayEmail && (
-            <p className="text-xs text-zinc-500 font-mono leading-tight">{displayEmail}</p>
+            <p className="text-[11px] text-zinc-600 font-mono leading-tight">{displayEmail}</p>
           )}
         </div>
 
         <button
           onClick={handleSignOut}
-          className="h-9 px-4 rounded-full border border-zinc-200 bg-white text-xs font-medium text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900 transition-colors cursor-pointer"
+          className="h-8 px-3.5 rounded-xl border border-zinc-200 bg-white text-xs font-medium text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900 transition-colors cursor-pointer active:scale-95 shadow-2xs"
         >
           Sair
         </button>

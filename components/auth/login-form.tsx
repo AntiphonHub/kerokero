@@ -4,8 +4,10 @@ import { useState, type FormEvent } from 'react';
 import { useAuth } from '@appwrite.io/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { motion } from 'motion/react';
 import { Input } from '@/components/ui/input';
 import { loginSchema } from '@/lib/schemas/auth';
+import { containerVariants, itemVariants } from '@/lib/motion';
 
 export function LoginForm() {
   const { signIn } = useAuth();
@@ -55,54 +57,69 @@ export function LoginForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-      <Input
-        name="email"
-        type="email"
-        label="E-mail"
-        placeholder="seu@email.com"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        required
-        autoComplete="email"
-        error={errors.email?.[0]}
-      />
+    <motion.form
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      onSubmit={handleSubmit}
+      className="flex flex-col gap-5"
+    >
+      <motion.div variants={itemVariants}>
+        <Input
+          name="email"
+          type="email"
+          label="E-mail"
+          placeholder="seu@email.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          autoComplete="email"
+          error={errors.email?.[0]}
+        />
+      </motion.div>
 
-      <Input
-        name="password"
-        type="password"
-        label="Senha"
-        placeholder="••••••••"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        required
-        autoComplete="current-password"
-        error={errors.password?.[0]}
-        rightElement={
-          <Link
-            href="#"
-            className="text-[13px] font-medium text-zinc-500 no-underline transition-colors hover:text-zinc-900 hover:underline"
-          >
-            Esqueceu a senha?
-          </Link>
-        }
-      />
+      <motion.div variants={itemVariants}>
+        <Input
+          name="password"
+          type="password"
+          label="Senha"
+          placeholder="••••••••"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          autoComplete="current-password"
+          error={errors.password?.[0]}
+          rightElement={
+            <Link
+              href="#"
+              className="text-[13px] font-medium text-zinc-500 no-underline transition-colors hover:text-zinc-900 hover:underline"
+            >
+              Esqueceu a senha?
+            </Link>
+          }
+        />
+      </motion.div>
 
       {errorMessage && (
-        <p className="text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg p-2.5">
+        <motion.p
+          variants={itemVariants}
+          className="text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg p-2.5"
+        >
           {errorMessage}
-        </p>
+        </motion.p>
       )}
 
-      <button
-        type="submit"
-        disabled={isPending}
-        className="btn-primary mt-1"
-      >
-        {isPending ? 'Entrando...' : 'Entrar'}
-      </button>
+      <motion.div variants={itemVariants}>
+        <button
+          type="submit"
+          disabled={isPending}
+          className="btn-primary mt-1 w-full"
+        >
+          {isPending ? 'Entrando...' : 'Entrar'}
+        </button>
+      </motion.div>
 
-      <p className="text-center text-sm text-zinc-500">
+      <motion.p variants={itemVariants} className="text-center text-sm text-zinc-500">
         Não tem uma conta?{' '}
         <Link
           href="/cadastro"
@@ -110,7 +127,7 @@ export function LoginForm() {
         >
           Cadastre-se
         </Link>
-      </p>
-    </form>
+      </motion.p>
+    </motion.form>
   );
 }
