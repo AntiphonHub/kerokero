@@ -24,24 +24,13 @@ export interface TableSessionDocument extends Models.DefaultDocument {
   paidAmount: number;
 }
 
+import { parseSessionParticipants } from '@/lib/utils/tab';
+export { parseSessionParticipants };
 function toPlainObject<T>(obj: unknown): T {
   return JSON.parse(JSON.stringify(obj)) as T;
 }
 
-export function parseSessionParticipants(participantsRaw: unknown): SessionParticipant[] {
-  if (Array.isArray(participantsRaw)) {
-    return participantsRaw;
-  }
-  if (typeof participantsRaw === 'string') {
-    try {
-      const parsed = JSON.parse(participantsRaw);
-      if (Array.isArray(parsed)) return parsed;
-    } catch {
-      return [];
-    }
-  }
-  return [];
-}
+
 
 export function deduplicateNickname(
   existingParticipants: SessionParticipant[],

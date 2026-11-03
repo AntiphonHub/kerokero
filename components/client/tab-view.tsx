@@ -2,12 +2,12 @@
 
 import React, { useState } from 'react';
 import type { OrderDocument } from '@/lib/appwrite/orders';
-import {
-  parseSessionParticipants,
-  type TableSessionDocument,
-  type SessionParticipant,
+import type {
+  TableSessionDocument,
+  SessionParticipant,
 } from '@/lib/appwrite/client-sessions';
 import {
+  parseSessionParticipants,
   filterParticipantOrders,
   calculateParticipantTotal,
   groupOrdersByParticipant,

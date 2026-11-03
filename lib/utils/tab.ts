@@ -27,6 +27,24 @@ export interface OrderStatusInfo {
 }
 
 /**
+ * Converte o campo de participantes da sessão para um array estruturado de forma segura.
+ */
+export function parseSessionParticipants(participantsRaw: unknown): SessionParticipant[] {
+  if (Array.isArray(participantsRaw)) {
+    return participantsRaw;
+  }
+  if (typeof participantsRaw === 'string') {
+    try {
+      const parsed = JSON.parse(participantsRaw);
+      if (Array.isArray(parsed)) return parsed;
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+/**
  * Filtra pedidos realizados por um participante específico.
  */
 export function filterParticipantOrders(

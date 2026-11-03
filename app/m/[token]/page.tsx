@@ -15,11 +15,11 @@ import { ClientApp } from '@/components/client/client-app';
 import { AlertCircle, QrCode } from 'lucide-react';
 
 interface PageProps {
-  params: Promise<{ token: string }> | { token: string };
+  params: Promise<{ token: string }>;
 }
 
 export default async function ClientTablePage(props: PageProps) {
-  const resolvedParams = await Promise.resolve(props.params);
+  const resolvedParams = await props.params;
   const token = resolvedParams?.token;
 
   // 1. Validar formato do token
