@@ -184,7 +184,6 @@ export function MenuView({
             const effectivePrice = getEffectiveProductPrice(product);
             const isHappyHour =
               product.happyHourPrice != null && product.happyHourPrice < product.price;
-            const hasAddons = product.addons && product.addons.length > 0;
 
             return (
               <div
@@ -224,12 +223,6 @@ export function MenuView({
                         </span>
                       )}
                     </div>
-
-                    {hasAddons && (
-                      <span className="text-[10px] font-medium text-amber-700 bg-amber-50 border border-amber-200/60 px-2 py-0.5 rounded-full">
-                        Personalizável
-                      </span>
-                    )}
                   </div>
                 </div>
 
