@@ -17,7 +17,6 @@ import {
   getTableByToken,
   getTableById,
   createServiceCall,
-  type TableDocument,
   type ServiceCallDocument,
 } from '@/lib/appwrite/tables';
 import {
@@ -39,7 +38,6 @@ import { appwriteConfig } from '@/lib/appwrite/config';
 import {
   createPixPaymentOnSubaccount,
   checkSubaccountPaymentStatus,
-  type CreatePixPaymentResult,
 } from '@/lib/asaas/pix';
 import { isValidCpf } from '@/lib/validators/cpf';
 import type { EstablishmentDocument } from '@/lib/appwrite/establishments';
@@ -449,7 +447,12 @@ export async function requestPixCheckoutAction(
       };
     }
 
-    const totalAmount = sessionDoc.totalAmount || 0;
+    const sessionOrders = await listSessionOrders(session.sessionId);
+    const ordersTotal = sessionOrders
+      .filter((o) => o.status !== 'cancelled')
+      .reduce((sum, o) => sum + (o.totalPrice || o.unitPrice * o.quantity), 0);
+
+    const totalAmount = Math.max(sessionDoc.totalAmount || 0, ordersTotal);
     const paidAmount = sessionDoc.paidAmount || 0;
     const remainingTableBalance = Math.max(0, totalAmount - paidAmount);
 

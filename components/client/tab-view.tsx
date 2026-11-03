@@ -19,13 +19,10 @@ import { formatCentsToBrl } from '@/lib/formatters';
 import {
   Receipt,
   Users,
-  Clock,
   CheckCircle2,
   RefreshCw,
   CreditCard,
-  ChefHat,
   MessageSquare,
-  Sparkles,
 } from 'lucide-react';
 
 export interface TabViewProps {
@@ -45,7 +42,6 @@ export function TabView({
   orders,
   session,
   currentParticipantId,
-  currentParticipantName,
   tableNumber,
   tableLabel,
   onPayTab,

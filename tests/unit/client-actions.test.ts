@@ -65,7 +65,8 @@ vi.mock('@/lib/appwrite/client-sessions', () => ({
 // Mock Appwrite orders
 vi.mock('@/lib/appwrite/orders', () => ({
   createOrder: vi.fn(),
-  listParticipantOrders: vi.fn(),
+  listParticipantOrders: vi.fn(async () => []),
+  listSessionOrders: vi.fn(async () => []),
 }));
 
 // Mock Appwrite server & SDK

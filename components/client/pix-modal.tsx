@@ -53,19 +53,38 @@ interface PixChargeData {
   mode: string;
 }
 
-export function PixModal({
-  isOpen,
+function getInitialPixMode(
+  initialMode: PixPaymentMode,
+  amounts: ReturnType<typeof calculatePixAmounts>,
+): PixPaymentMode {
+  if (initialMode === 'my_items' && amounts.myItemsCents <= 0) {
+    if (amounts.remainingTableBalance > 0) {
+      return 'total';
+    }
+  }
+  return initialMode;
+}
+
+function PixModalInner({
   onClose,
   orders,
   session,
   currentParticipantId,
-  currentParticipantName,
   tableNumber,
   initialMode = 'my_items',
   onPaymentComplete,
-}: PixModalProps) {
+}: Omit<PixModalProps, 'isOpen'>) {
+  // Recalcula valores da mesa e do participante
+  const amounts = calculatePixAmounts({
+    orders,
+    session,
+    currentParticipantId,
+  });
+
   const [step, setStep] = useState<'mode_select' | 'cpf_input' | 'qr_code'>('mode_select');
-  const [selectedMode, setSelectedMode] = useState<PixPaymentMode>(initialMode);
+  const [selectedMode, setSelectedMode] = useState<PixPaymentMode>(() =>
+    getInitialPixMode(initialMode, amounts),
+  );
   const [cpf, setCpf] = useState('');
   const [cpfError, setCpfError] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -76,13 +95,6 @@ export function PixModal({
 
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Recalcula valores da mesa e do participante
-  const amounts = calculatePixAmounts({
-    orders,
-    session,
-    currentParticipantId,
-  });
 
   // Limpa timers ao fechar ou desmontar
   const clearAllTimers = () => {
@@ -96,28 +108,17 @@ export function PixModal({
     }
   };
 
+  const handleClose = () => {
+    clearAllTimers();
+    onClose();
+  };
+
+  // Garante limpeza de timers no desmonte do componente
   useEffect(() => {
-    if (!isOpen) {
+    return () => {
       clearAllTimers();
-      setStep('mode_select');
-      setSelectedMode(initialMode);
-      setCpf('');
-      setCpfError(null);
-      setErrorMessage(null);
-      setPixData(null);
-      setCopied(false);
-      setSecondsLeft(900);
-    } else {
-      setSelectedMode(initialMode);
-      // Se a modalidade inicial tiver saldo <= 0, busca uma com saldo
-      if (initialMode === 'my_items' && amounts.myItemsCents <= 0) {
-        if (amounts.remainingTableBalance > 0) {
-          setSelectedMode('total');
-        }
-      }
-    }
-    return () => clearAllTimers();
-  }, [isOpen, initialMode, amounts.myItemsCents, amounts.remainingTableBalance]);
+    };
+  }, []);
 
   // Efeito de contagem regressiva e polling quando na tela de QR Code
   useEffect(() => {
@@ -159,8 +160,6 @@ export function PixModal({
 
     return () => clearAllTimers();
   }, [step, pixData, selectedMode, onPaymentComplete]);
-
-  if (!isOpen) return null;
 
   // Valor a pagar conforme a modalidade selecionada
   const targetAmountCents =
@@ -279,7 +278,7 @@ export function PixModal({
 
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             aria-label="Fechar modal"
             className="size-8 rounded-xl bg-zinc-100 hover:bg-zinc-200/80 text-zinc-500 hover:text-zinc-800 flex items-center justify-center transition-colors"
           >
@@ -562,4 +561,9 @@ export function PixModal({
       </div>
     </div>
   );
+}
+
+export function PixModal(props: PixModalProps) {
+  if (!props.isOpen) return null;
+  return <PixModalInner key="pix-modal" {...props} />;
 }

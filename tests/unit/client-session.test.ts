@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import {
   generateParticipantToken,
   verifyParticipantToken,
@@ -94,6 +94,25 @@ describe('Client Session Security & Participant Token', () => {
     establishmentId: 'est_999',
     createdAt: Date.now(),
   };
+
+  it('throws in production if neither SESSION_SECRET nor APPWRITE_API_KEY is set', async () => {
+    const origEnv = process.env.NODE_ENV;
+    const origSecret = process.env.SESSION_SECRET;
+    const origKey = process.env.APPWRITE_API_KEY;
+    try {
+      (process.env as Record<string, string | undefined>).NODE_ENV = 'production';
+      delete process.env.SESSION_SECRET;
+      delete process.env.APPWRITE_API_KEY;
+
+      await expect(generateParticipantToken(samplePayload)).rejects.toThrow(
+        'Missing SESSION_SECRET or APPWRITE_API_KEY in production environment'
+      );
+    } finally {
+      (process.env as Record<string, string | undefined>).NODE_ENV = origEnv;
+      if (origSecret !== undefined) process.env.SESSION_SECRET = origSecret;
+      if (origKey !== undefined) process.env.APPWRITE_API_KEY = origKey;
+    }
+  });
 
   it('exports PARTICIPANT_COOKIE_NAME as kerokero_participant', () => {
     expect(PARTICIPANT_COOKIE_NAME).toBe('kerokero_participant');

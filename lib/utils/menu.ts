@@ -1,4 +1,4 @@
-import type { ProductDocument, CategoryDocument } from '@/lib/appwrite/products';
+import type { ProductDocument } from '@/lib/appwrite/products';
 import type { CartItem } from '@/lib/store/cart-store';
 import type { CartItemInput } from '@/actions/client';
 

@@ -12,6 +12,8 @@ export interface EstablishmentDocument extends Models.DefaultDocument {
   phone?: string;
   postalCode?: string;
   address?: string;
+  latitude?: number;
+  longitude?: number;
   tablesCount?: number;
   orderMode?: 'direct' | 'waiter_approval';
   openingDays?: string; // JSON string

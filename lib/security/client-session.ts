@@ -18,11 +18,16 @@ export type ParticipantSessionInput = Omit<ParticipantSessionPayload, 'createdAt
 };
 
 function getSessionSecret(): string {
-  return (
-    process.env.SESSION_SECRET ||
-    process.env.APPWRITE_API_KEY ||
-    'kerokero-participant-session-dev-secret-key'
-  );
+  const secret = process.env.SESSION_SECRET || process.env.APPWRITE_API_KEY;
+  if (!secret) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'Missing SESSION_SECRET or APPWRITE_API_KEY in production environment',
+      );
+    }
+    return 'kerokero-participant-session-dev-secret-key';
+  }
+  return secret;
 }
 
 /**

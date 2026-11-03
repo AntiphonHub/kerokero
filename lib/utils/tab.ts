@@ -113,7 +113,7 @@ export function calculateTableSummary(
     0,
   );
 
-  const totalAmount = session && session.totalAmount > 0 ? session.totalAmount : ordersTotal;
+  const totalAmount = session ? Math.max(session.totalAmount || 0, ordersTotal) : ordersTotal;
   const paidAmount = session ? (session.paidAmount || 0) : 0;
   const remainingBalance = Math.max(0, totalAmount - paidAmount);
   const isFullyPaid = totalAmount > 0 && remainingBalance <= 0;

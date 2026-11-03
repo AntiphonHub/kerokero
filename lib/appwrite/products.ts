@@ -81,8 +81,9 @@ export async function getCategoriesByEstablishment(
     );
 
     return res.documents.map((doc) => toPlainObject<CategoryDocument>(doc));
-  } catch (error: any) {
-    if (error?.code === 404 || error?.type === 'collection_not_found') {
+  } catch (error: unknown) {
+    const err = error as { code?: number; type?: string };
+    if (err?.code === 404 || err?.type === 'collection_not_found') {
       console.warn(`[Appwrite] Categories collection not found. Returning empty list.`);
       return [];
     }
@@ -141,8 +142,9 @@ export async function getProductsByEstablishment(
     );
 
     return res.documents.map((doc) => parseProductDocument(doc));
-  } catch (error: any) {
-    if (error?.code === 404 || error?.type === 'collection_not_found') {
+  } catch (error: unknown) {
+    const err = error as { code?: number; type?: string };
+    if (err?.code === 404 || err?.type === 'collection_not_found') {
       console.warn(`[Appwrite] Products collection not found. Returning empty list.`);
       return [];
     }

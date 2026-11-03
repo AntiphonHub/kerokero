@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Store } from 'lucide-react';
+import { User } from 'lucide-react';
 
 export interface PwaShellProps {
   tableLabel?: string;

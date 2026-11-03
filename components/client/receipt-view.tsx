@@ -3,7 +3,7 @@
 import React from 'react';
 import { formatPriceCents } from '@/lib/utils/formatters';
 import { PIX_MODE_DETAILS, type PixPaymentMode } from '@/lib/utils/pix';
-import { Check, Receipt, Sparkles, ArrowRight, RotateCcw } from 'lucide-react';
+import { Check, ArrowRight } from 'lucide-react';
 
 export interface ReceiptViewProps {
   amountCents: number;

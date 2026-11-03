@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { User, Loader2, ArrowRight } from 'lucide-react';
 import { joinTable } from '@/actions/client';
 import type { Coordinates } from '@/lib/security/geofence';
+import type { TableSessionDocument } from '@/lib/appwrite/client-sessions';
 export { getGeolocationErrorMessage, type GeolocationErrorDetails } from './gate-location';
 
 export function validateNickname(nickname: string): {
@@ -41,9 +42,9 @@ export interface GateNicknameProps {
     participantName: string;
     tableNumber: number;
     token: string;
-    session?: any;
+    session?: TableSessionDocument;
   }) => void;
-  onSuccess?: (data: any) => void;
+  onSuccess?: (data: unknown) => void;
 }
 
 export function GateNickname({

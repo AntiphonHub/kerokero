@@ -7,8 +7,6 @@ import {
   Plus,
   UtensilsCrossed,
   CheckCircle2,
-  Clock,
-  Sparkles,
 } from 'lucide-react';
 import type { ProductDocument, CategoryDocument } from '@/lib/appwrite/products';
 import { filterProducts, getEffectiveProductPrice } from '@/lib/utils/menu';
