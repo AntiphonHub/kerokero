@@ -43,13 +43,12 @@ export async function asaasRequest<T>(
   const { apiUrl, apiKey } = getAsaasConfig();
   const url = `${apiUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
 
+  const customHeaders = (options.headers as Record<string, string> | undefined) || {};
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string> | undefined),
+    ...(apiKey ? { access_token: apiKey } : {}),
+    ...customHeaders,
   };
-  if (apiKey) {
-    headers['access_token'] = apiKey;
-  }
 
   const res = await fetch(url, {
     ...options,
