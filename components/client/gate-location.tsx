@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { MapPin, AlertCircle, Loader2, Compass, ShieldCheck } from 'lucide-react';
+import { MapPin, AlertCircle, Loader2, Compass, ShieldCheck, Laptop } from 'lucide-react';
 import { validateClientLocation } from '@/actions/client';
 import type { Coordinates } from '@/lib/security/geofence';
 
@@ -71,9 +71,28 @@ export function GateLocation({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [errorDetails, setErrorDetails] = useState<GeolocationErrorDetails | null>(null);
 
+  const isDev =
+    process.env.NODE_ENV === 'development' ||
+    (typeof window !== 'undefined' &&
+      (window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1' ||
+        window.location.hostname.startsWith('192.168.') ||
+        window.location.hostname.endsWith('.local')));
+
   const handleNotifySuccess = (coords: Coordinates | null) => {
     if (onLocationValidated) onLocationValidated(coords);
     if (onSuccess) onSuccess(coords);
+  };
+
+  const handleDevBypass = async () => {
+    setStatus('validating');
+    const result = await validateClientLocation(token, null);
+    if (result.success) {
+      handleNotifySuccess(null);
+    } else {
+      setStatus('error');
+      setErrorMessage(result.message || 'Erro ao validar acesso na mesa.');
+    }
   };
 
   const requestLocation = () => {
@@ -81,6 +100,10 @@ export function GateLocation({
     setErrorDetails(null);
 
     if (typeof window === 'undefined' || !navigator?.geolocation) {
+      if (isDev) {
+        handleDevBypass();
+        return;
+      }
       setStatus('error');
       setErrorMessage('Seu navegador não possui suporte a geolocalização.');
       return;
@@ -88,34 +111,50 @@ export function GateLocation({
 
     setStatus('requesting');
 
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        setStatus('validating');
-        const coords: Coordinates = {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        };
+    const tryGetPosition = (highAccuracy: boolean) => {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          setStatus('validating');
+          const coords: Coordinates = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          };
 
-        const result = await validateClientLocation(token, coords);
-        if (result.success) {
-          handleNotifySuccess(coords);
-        } else {
+          const result = await validateClientLocation(token, coords);
+          if (result.success) {
+            handleNotifySuccess(coords);
+          } else {
+            setStatus('error');
+            setErrorMessage(result.message || 'Você precisa estar no estabelecimento para acessar a mesa.');
+          }
+        },
+        async (error) => {
+          // Se falhou ou deu timeout em alta precisão, tenta novamente com precisão de rede/Wi-Fi
+          if (highAccuracy && (error.code === 3 || error.code === 2)) {
+            tryGetPosition(false);
+            return;
+          }
+
+          // Se estiver em ambiente local de desenvolvimento/teste e falhar (ex: computador sem GPS)
+          if (isDev) {
+            handleDevBypass();
+            return;
+          }
+
           setStatus('error');
-          setErrorMessage(result.message || 'Você precisa estar no estabelecimento para acessar a mesa.');
-        }
-      },
-      (error) => {
-        setStatus('error');
-        const details = getGeolocationErrorMessage(error);
-        setErrorDetails(details);
-        setErrorMessage(details.description);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
-      },
-    );
+          const details = getGeolocationErrorMessage(error);
+          setErrorDetails(details);
+          setErrorMessage(details.description);
+        },
+        {
+          enableHighAccuracy: highAccuracy,
+          timeout: highAccuracy ? 5000 : 8000,
+          maximumAge: 60000,
+        },
+      );
+    };
+
+    tryGetPosition(true);
   };
 
   return (
@@ -193,6 +232,18 @@ export function GateLocation({
             </>
           )}
         </button>
+
+        {isDev && (
+          <button
+            type="button"
+            onClick={handleDevBypass}
+            disabled={status === 'requesting' || status === 'validating'}
+            className="w-full mt-3 min-h-[44px] px-4 py-2.5 rounded-xl border border-zinc-200 bg-zinc-50 text-zinc-700 font-medium text-xs hover:bg-zinc-100 transition-all flex items-center justify-center gap-1.5"
+          >
+            <Laptop className="size-3.5 text-zinc-500" />
+            <span>Continuar sem GPS (Modo Teste / PC)</span>
+          </button>
+        )}
 
         <p className="text-[11px] text-zinc-400 mt-4">
           Acesso restrito ao raio de 250m do estabelecimento para prevenção de pedidos indevidos.
