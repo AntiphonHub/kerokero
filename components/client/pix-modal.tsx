@@ -3,7 +3,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { OrderDocument } from '@/lib/appwrite/orders';
 import type { TableSessionDocument } from '@/lib/appwrite/client-sessions';
-import { requestPixCheckoutAction, pollPixStatusAction } from '@/actions/client';
+import {
+  requestPixCheckoutAction,
+  pollPixStatusAction,
+  callWaiterAction,
+} from '@/actions/client';
 import { isValidCpf, formatCpf } from '@/lib/validators/cpf';
 import { formatPriceCents } from '@/lib/utils/formatters';
 import {
@@ -17,6 +21,7 @@ import {
   QrCode,
   Copy,
   Check,
+  CheckCircle2,
   AlertCircle,
   Loader2,
   Receipt,
@@ -81,10 +86,15 @@ function PixModalInner({
     currentParticipantId,
   });
 
-  const [step, setStep] = useState<'mode_select' | 'cpf_input' | 'qr_code'>('mode_select');
+  const [step, setStep] = useState<
+    'mode_select' | 'payment_method' | 'cpf_input' | 'qr_code' | 'card_requested'
+  >('mode_select');
   const [selectedMode, setSelectedMode] = useState<PixPaymentMode>(() =>
     getInitialPixMode(initialMode, amounts),
   );
+  const [paymentMethod, setPaymentMethod] = useState<'pix' | 'card'>('pix');
+  const [cardType, setCardType] = useState<'Crédito' | 'Débito' | 'Refeição / VR'>('Crédito');
+  const [isCallingWaiter, setIsCallingWaiter] = useState(false);
   const [cpf, setCpf] = useState('');
   const [cpfError, setCpfError] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -229,6 +239,26 @@ function PixModalInner({
     }
   };
 
+  const handleRequestCard = async () => {
+    setIsCallingWaiter(true);
+    setErrorMessage(null);
+    try {
+      const modeLabel = PIX_MODE_DETAILS[selectedMode].label;
+      const formattedAmount = formatPriceCents(targetAmountCents);
+      const reason = `Maquininha na mesa: ${cardType} - ${formattedAmount} (${modeLabel})`;
+      const res = await callWaiterAction(reason, 'bill_card');
+      if (res.success) {
+        setStep('card_requested');
+      } else {
+        setErrorMessage(res.message || 'Falha ao solicitar maquininha.');
+      }
+    } catch {
+      setErrorMessage('Erro de conexão ao chamar garçom.');
+    } finally {
+      setIsCallingWaiter(false);
+    }
+  };
+
   const getModeIcon = (mode: PixPaymentMode) => {
     switch (mode) {
       case 'my_items':
@@ -254,7 +284,7 @@ function PixModalInner({
         {/* Modal Header */}
         <div className="p-4 border-b border-zinc-200/80 flex items-center justify-between bg-zinc-50/60">
           <div className="flex items-center gap-2">
-            {step === 'cpf_input' && (
+            {step === 'payment_method' && (
               <button
                 type="button"
                 onClick={() => setStep('mode_select')}
@@ -264,14 +294,26 @@ function PixModalInner({
                 <ArrowLeft className="size-4" />
               </button>
             )}
+            {step === 'cpf_input' && (
+              <button
+                type="button"
+                onClick={() => setStep('payment_method')}
+                className="size-8 rounded-lg hover:bg-zinc-200/80 text-zinc-600 flex items-center justify-center transition-colors"
+                aria-label="Voltar para forma de pagamento"
+              >
+                <ArrowLeft className="size-4" />
+              </button>
+            )}
             <div>
               <span className="text-[10px] font-bold text-amber-600 uppercase tracking-wider block">
                 Mesa {tableNumber} • Checkout
               </span>
               <h2 id="pix-modal-title" className="text-base font-bold text-zinc-900 tracking-tight">
-                {step === 'mode_select' && 'Pagar com PIX'}
+                {step === 'mode_select' && 'Pagar comanda'}
+                {step === 'payment_method' && 'Forma de Pagamento'}
                 {step === 'cpf_input' && 'Identificação do Pagador'}
                 {step === 'qr_code' && 'Aguardando Pagamento'}
+                {step === 'card_requested' && 'Solicitação Enviada'}
               </h2>
             </div>
           </div>
@@ -291,11 +333,6 @@ function PixModalInner({
           {/* STEP 1: SELEÇÃO DA MODALIDADE */}
           {step === 'mode_select' && (
             <div className="space-y-4">
-              <p className="text-xs text-zinc-600">
-                Selecione como prefere pagar sua conta agora. O valor será creditado
-                instantaneamente para o restaurante.
-              </p>
-
               <div className="space-y-2.5">
                 {(['my_items', 'split', 'total'] as PixPaymentMode[]).map((mode) => {
                   const isSelected = selectedMode === mode;
@@ -371,10 +408,196 @@ function PixModalInner({
                 <button
                   type="button"
                   disabled={targetAmountCents <= 0}
-                  onClick={() => setStep('cpf_input')}
+                  onClick={() => setStep('payment_method')}
                   className="w-full min-h-[48px] px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 disabled:bg-zinc-300 text-white font-bold text-xs uppercase tracking-wide flex items-center justify-center gap-2 transition-colors active:scale-[0.99] shadow-xs"
                 >
-                  <span>Continuar para Pagamento ({formatPriceCents(targetAmountCents)})</span>
+                  <span>Continuar ({formatPriceCents(targetAmountCents)})</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 2: FORMA DE PAGAMENTO (PIX vs MAQUININHA) */}
+          {step === 'payment_method' && (
+            <div className="space-y-4">
+              <div className="p-3 rounded-2xl bg-zinc-50 border border-zinc-200/80 flex items-center justify-between text-xs">
+                <span className="text-zinc-500 font-medium">Valor a pagar:</span>
+                <span className="text-sm font-bold text-zinc-900">
+                  {formatPriceCents(targetAmountCents)}
+                </span>
+              </div>
+
+              <p className="text-xs text-zinc-600">
+                Selecione como deseja efetuar o pagamento:
+              </p>
+
+              <div className="space-y-2.5">
+                {/* Opção 1: PIX */}
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod('pix')}
+                  className={`w-full p-3.5 rounded-2xl border text-left transition-all flex items-center justify-between gap-3 min-h-[56px] ${
+                    paymentMethod === 'pix'
+                      ? 'border-amber-500 bg-amber-50/30 ring-1 ring-amber-500 shadow-2xs'
+                      : 'border-zinc-200/80 bg-white hover:border-zinc-300 hover:bg-zinc-50/50'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`size-10 rounded-xl flex items-center justify-center shrink-0 ${
+                        paymentMethod === 'pix'
+                          ? 'bg-amber-500 text-zinc-950 font-bold'
+                          : 'bg-zinc-100 text-zinc-600'
+                      }`}
+                    >
+                      <QrCode className="size-5" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-zinc-900 block leading-tight">
+                          PIX
+                        </span>
+                        <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded-full border border-emerald-200">
+                          Instantâneo
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-zinc-500 block mt-0.5 leading-snug">
+                        QR Code e Copia-e-Cola direto no celular
+                      </span>
+                    </div>
+                  </div>
+
+                  <span className="size-4 rounded-full border border-zinc-300 flex items-center justify-center shrink-0">
+                    {paymentMethod === 'pix' && <span className="size-2 rounded-full bg-amber-500" />}
+                  </span>
+                </button>
+
+                {/* Opção 2: Maquininha */}
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod('card')}
+                  className={`w-full p-3.5 rounded-2xl border text-left transition-all flex items-center justify-between gap-3 min-h-[56px] ${
+                    paymentMethod === 'card'
+                      ? 'border-amber-500 bg-amber-50/30 ring-1 ring-amber-500 shadow-2xs'
+                      : 'border-zinc-200/80 bg-white hover:border-zinc-300 hover:bg-zinc-50/50'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`size-10 rounded-xl flex items-center justify-center shrink-0 ${
+                        paymentMethod === 'card'
+                          ? 'bg-zinc-900 text-white font-bold'
+                          : 'bg-zinc-100 text-zinc-600'
+                      }`}
+                    >
+                      <CreditCard className="size-5" />
+                    </div>
+                    <div>
+                      <span className="text-xs font-bold text-zinc-900 block leading-tight">
+                        Maquininha de Cartão
+                      </span>
+                      <span className="text-[11px] text-zinc-500 block mt-0.5 leading-snug">
+                        Chamar garçom na mesa com a maquininha
+                      </span>
+                    </div>
+                  </div>
+
+                  <span className="size-4 rounded-full border border-zinc-300 flex items-center justify-center shrink-0">
+                    {paymentMethod === 'card' && <span className="size-2 rounded-full bg-zinc-900" />}
+                  </span>
+                </button>
+              </div>
+
+              {/* Se Maquininha selecionada: tipo de cartão */}
+              {paymentMethod === 'card' && (
+                <div className="pt-2 space-y-2 animate-in fade-in duration-200">
+                  <span className="text-[11px] font-semibold text-zinc-500 block">
+                    Modalidade no cartão:
+                  </span>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(['Crédito', 'Débito', 'Refeição / VR'] as const).map((t) => (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => setCardType(t)}
+                        className={`min-h-[40px] px-2 rounded-xl text-xs font-semibold border transition-all text-center ${
+                          cardType === t
+                            ? 'bg-zinc-900 text-white border-zinc-900 shadow-2xs'
+                            : 'bg-zinc-50 text-zinc-700 border-zinc-200/80 hover:bg-zinc-100'
+                        }`}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {errorMessage && (
+                <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 flex items-center gap-2">
+                  <AlertCircle className="size-4 shrink-0 text-red-500" />
+                  <span>{errorMessage}</span>
+                </div>
+              )}
+
+              {/* Botão de Ação */}
+              <div className="pt-2">
+                {paymentMethod === 'pix' ? (
+                  <button
+                    type="button"
+                    onClick={() => setStep('cpf_input')}
+                    className="w-full min-h-[48px] px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-xs uppercase tracking-wide flex items-center justify-center gap-2 transition-colors active:scale-[0.99] shadow-xs"
+                  >
+                    <span>Continuar com PIX</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    disabled={isCallingWaiter}
+                    onClick={handleRequestCard}
+                    className="w-full min-h-[48px] px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 disabled:opacity-50 text-white font-bold text-xs uppercase tracking-wide flex items-center justify-center gap-2 transition-colors active:scale-[0.99] shadow-xs"
+                  >
+                    {isCallingWaiter ? (
+                      <>
+                        <Loader2 className="size-4 animate-spin" />
+                        <span>Chamando garçom...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard className="size-4 text-amber-400" />
+                        <span>Chamar com Maquininha ({cardType})</span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* STEP: CONFIRMAÇÃO DE MAQUININHA */}
+          {step === 'card_requested' && (
+            <div className="py-6 px-2 flex flex-col items-center text-center space-y-4 animate-in fade-in duration-200">
+              <div className="size-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 flex items-center justify-center shadow-xs">
+                <CheckCircle2 className="size-8" />
+              </div>
+
+              <div>
+                <h3 className="text-base font-bold text-zinc-900">
+                  Garçom a caminho!
+                </h3>
+                <p className="text-xs text-zinc-600 mt-1 max-w-xs leading-relaxed">
+                  Solicitação enviada. Um atendente está vindo até a sua mesa com a maquininha ({cardType}) no valor de{' '}
+                  <strong className="text-zinc-900">{formatPriceCents(targetAmountCents)}</strong>.
+                </p>
+              </div>
+
+              <div className="w-full pt-4">
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  className="w-full min-h-[48px] px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-xs uppercase tracking-wide transition-colors active:scale-[0.99] shadow-xs"
+                >
+                  Entendido
                 </button>
               </div>
             </div>
