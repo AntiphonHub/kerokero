@@ -84,15 +84,8 @@ export function GateLocation({
     if (onSuccess) onSuccess(coords);
   };
 
-  const handleDevBypass = async () => {
-    setStatus('validating');
-    const result = await validateClientLocation(token, null);
-    if (result.success) {
-      handleNotifySuccess(null);
-    } else {
-      setStatus('error');
-      setErrorMessage(result.message || 'Erro ao validar acesso na mesa.');
-    }
+  const handleDevBypass = () => {
+    handleNotifySuccess(null);
   };
 
   const requestLocation = () => {
@@ -105,53 +98,73 @@ export function GateLocation({
         return;
       }
       setStatus('error');
-      setErrorMessage('Seu navegador não possui suporte a geolocalização.');
+      setErrorMessage('Seu navegador não possui suporte a geolocalização ou a conexão não é segura (HTTPS).');
       return;
     }
 
     setStatus('requesting');
 
     const tryGetPosition = (highAccuracy: boolean) => {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          setStatus('validating');
-          const coords: Coordinates = {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          };
+      try {
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            setStatus('validating');
+            try {
+              const coords: Coordinates = {
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+              };
 
-          const result = await validateClientLocation(token, coords);
-          if (result.success) {
-            handleNotifySuccess(coords);
-          } else {
+              const result = await validateClientLocation(token, coords);
+              if (result.success) {
+                handleNotifySuccess(coords);
+              } else {
+                setStatus('error');
+                setErrorMessage(result.message || 'Você precisa estar no estabelecimento para acessar a mesa.');
+              }
+            } catch (actErr) {
+              console.error('[validateClientLocation] Erro na action:', actErr);
+              if (isDev) {
+                handleDevBypass();
+              } else {
+                setStatus('error');
+                setErrorMessage('Erro de comunicação com o servidor. Tente novamente.');
+              }
+            }
+          },
+          (error) => {
+            // Se falhou ou deu timeout em alta precisão, tenta novamente com precisão de rede/Wi-Fi
+            if (highAccuracy && (error.code === 3 || error.code === 2)) {
+              tryGetPosition(false);
+              return;
+            }
+
+            // Se estiver em ambiente local de desenvolvimento/teste e falhar (ex: computador ou HTTP local)
+            if (isDev) {
+              handleDevBypass();
+              return;
+            }
+
             setStatus('error');
-            setErrorMessage(result.message || 'Você precisa estar no estabelecimento para acessar a mesa.');
-          }
-        },
-        async (error) => {
-          // Se falhou ou deu timeout em alta precisão, tenta novamente com precisão de rede/Wi-Fi
-          if (highAccuracy && (error.code === 3 || error.code === 2)) {
-            tryGetPosition(false);
-            return;
-          }
-
-          // Se estiver em ambiente local de desenvolvimento/teste e falhar (ex: computador sem GPS)
-          if (isDev) {
-            handleDevBypass();
-            return;
-          }
-
+            const details = getGeolocationErrorMessage(error);
+            setErrorDetails(details);
+            setErrorMessage(details.description);
+          },
+          {
+            enableHighAccuracy: highAccuracy,
+            timeout: highAccuracy ? 4000 : 7000,
+            maximumAge: 60000,
+          },
+        );
+      } catch (err) {
+        console.error('[getCurrentPosition] Exceção síncrona:', err);
+        if (isDev) {
+          handleDevBypass();
+        } else {
           setStatus('error');
-          const details = getGeolocationErrorMessage(error);
-          setErrorDetails(details);
-          setErrorMessage(details.description);
-        },
-        {
-          enableHighAccuracy: highAccuracy,
-          timeout: highAccuracy ? 5000 : 8000,
-          maximumAge: 60000,
-        },
-      );
+          setErrorMessage('Erro ao acessar os serviços de localização do navegador.');
+        }
+      }
     };
 
     tryGetPosition(true);
