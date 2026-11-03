@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
+    "init:tables": "node scripts/init-tables.mjs",
     "postinstall": "node scripts/patch-next.js"
   },
   "dependencies": {
@@ -23,6 +24,7 @@
     "motion": "^14.9.0",
     "next": "16.4.3",
     "node-appwrite": "^26.2.0",
+    "qrcode": "^1.5.4",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "shadcn": "^4.23.0",
@@ -34,6 +36,7 @@
     "@tailwindcss/turbopack": "^4",
     "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^20",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",

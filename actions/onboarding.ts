@@ -24,6 +24,7 @@ import {
 } from '@/lib/asaas/subscriptions';
 import { createAsaasSubaccount } from '@/lib/asaas/subaccounts';
 import { generateKycKey, uploadKycDocument } from '@/lib/r2/storage';
+import { ensureEstablishmentTables } from '@/lib/appwrite/tables';
 
 export interface ActionResponse {
   success?: boolean;
@@ -257,6 +258,15 @@ export async function submitSubaccountAction(
         subaccountApiKey: subaccountApiKey || '',
       },
     });
+
+    // 5. Provisiona antecipadamente as mesas com seus tokens de QR Code
+    if (establishment.tablesCount) {
+      try {
+        await ensureEstablishmentTables(establishment.$id, establishment.tablesCount);
+      } catch (tableErr) {
+        console.warn('[Onboarding] Aviso: falha ao pré-provisionar mesas:', tableErr);
+      }
+    }
 
     return {
       success: true,

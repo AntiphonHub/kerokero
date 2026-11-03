@@ -6,6 +6,8 @@ export function formatCentsToBrl(cents: number | null | undefined): string {
   });
 }
 
+export const formatCurrency = formatCentsToBrl;
+
 export function parseBrlToCents(val: string): number {
   const digits = val.replace(/\D/g, '');
   if (!digits) return 0;

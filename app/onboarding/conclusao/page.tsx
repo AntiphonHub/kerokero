@@ -4,6 +4,7 @@ import {
   getEstablishmentByUserId,
   updateSubscriptionStatus,
 } from '@/lib/appwrite/establishments';
+import { ensureEstablishmentTables } from '@/lib/appwrite/tables';
 import {
   getAsaasSubscriptionPix,
   getAsaasSubscriptionPayments,
@@ -23,6 +24,7 @@ export default async function OnboardingConclusaoPage() {
 
   // Se já estiver ativa, vai direto para o dashboard
   if (est.subscriptionStatus === 'active') {
+    await ensureEstablishmentTables(est.$id, est.tablesCount || 10);
     redirect('/dashboard');
   }
 
@@ -35,6 +37,7 @@ export default async function OnboardingConclusaoPage() {
       );
       if (isPaid) {
         await updateSubscriptionStatus(est.asaasSubscriptionId, 'active');
+        await ensureEstablishmentTables(est.$id, est.tablesCount || 10);
         redirect('/dashboard');
       }
     } catch (err) {
