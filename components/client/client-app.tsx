@@ -9,6 +9,9 @@ import { MenuView } from './menu-view';
 import { TabView } from './tab-view';
 import { ServiceButtons } from './service-buttons';
 import { RealtimeListener } from './realtime-listener';
+import { PixModal } from './pix-modal';
+import { ReceiptView } from './receipt-view';
+import type { PixPaymentMode } from '@/lib/utils/pix';
 import { UtensilsCrossed, Receipt } from 'lucide-react';
 
 export interface ClientAppProps {
@@ -41,6 +44,16 @@ export function ClientApp({
   const [session, setSession] = useState<TableSessionDocument | null>(initialSession);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  // Estados do Modal PIX e Tela de Comprovante Quitado
+  const [isPixOpen, setIsPixOpen] = useState(false);
+  const [pixMode, setPixMode] = useState<PixPaymentMode>('my_items');
+  const [receiptData, setReceiptData] = useState<{
+    amountCents: number;
+    mode: PixPaymentMode;
+    paymentId: string;
+    paidAt: string;
+  } | null>(null);
+
   // Revalidação dos dados da comanda (via WebSocket, visibilidade ou manual)
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -64,11 +77,39 @@ export function ClientApp({
     handleRefresh();
   }, [handleRefresh]);
 
-  // Ação de pagamento disparada pela comanda (Task 9 integrará modal PIX)
+  // Abertura do modal de pagamento PIX
   const handlePayTab = (mode: 'my_items' | 'split' | 'total') => {
-    // Exibe instrução inicial ou prepara transição para o modal PIX
-    console.info('[ClientApp] Iniciar pagamento:', mode);
+    setPixMode(mode);
+    setIsPixOpen(true);
   };
+
+  // Quando o polling do modal confirma quitação no Asaas
+  const handlePaymentComplete = (data: {
+    amountCents: number;
+    mode: PixPaymentMode;
+    paymentId: string;
+    paidAt: string;
+  }) => {
+    setIsPixOpen(false);
+    setReceiptData(data);
+  };
+
+  // Se o participante concluiu o pagamento, exibe tela de comprovante quitado
+  if (receiptData) {
+    return (
+      <ReceiptView
+        amountCents={receiptData.amountCents}
+        mode={receiptData.mode}
+        participantName={currentParticipantName}
+        tableNumber={tableNumber}
+        tableLabel={tableLabel}
+        paidAt={receiptData.paidAt}
+        onFinish={() => {
+          window.location.reload();
+        }}
+      />
+    );
+  }
 
   const activeOrdersCount = orders.filter((o) => o.status !== 'cancelled').length;
 
@@ -110,9 +151,23 @@ export function ClientApp({
             onRefresh={handleRefresh}
             isRefreshing={isRefreshing}
             onPayTab={handlePayTab}
+            onOpenPayment={handlePayTab}
           />
         )}
       </div>
+
+      {/* Modal de Pagamento PIX e Polling */}
+      <PixModal
+        isOpen={isPixOpen}
+        onClose={() => setIsPixOpen(false)}
+        orders={orders}
+        session={session}
+        currentParticipantId={currentParticipantId}
+        currentParticipantName={currentParticipantName}
+        tableNumber={tableNumber}
+        initialMode={pixMode}
+        onPaymentComplete={handlePaymentComplete}
+      />
 
       {/* Fixed Bottom Navigation: Cardápio vs Comanda */}
       <nav

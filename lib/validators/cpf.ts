@@ -1,3 +1,5 @@
+import { maskCpf } from '@/lib/masks';
+
 /**
  * Validação algorítmica matemática de CPF (Módulo 11)
  */
@@ -32,4 +34,11 @@ export function isValidCpf(value: string): boolean {
   if (rev !== Number(clean.charAt(10))) return false;
 
   return true;
+}
+
+/**
+ * Formata string como CPF (000.000.000-00)
+ */
+export function formatCpf(value: string): string {
+  return maskCpf(value);
 }

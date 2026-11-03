@@ -36,6 +36,7 @@ export interface TabViewProps {
   tableNumber: number;
   tableLabel?: string;
   onPayTab?: (mode: 'my_items' | 'split' | 'total') => void;
+  onOpenPayment?: (mode: 'my_items' | 'split' | 'total') => void;
   onRefresh?: () => void;
   isRefreshing?: boolean;
 }
@@ -48,10 +49,16 @@ export function TabView({
   tableNumber,
   tableLabel,
   onPayTab,
+  onOpenPayment,
   onRefresh,
   isRefreshing = false,
 }: TabViewProps) {
   const [activeTab, setActiveTab] = useState<'my_items' | 'table'>('my_items');
+
+  const handlePay = (mode: 'my_items' | 'split' | 'total') => {
+    onOpenPayment?.(mode);
+    onPayTab?.(mode);
+  };
 
   const knownParticipants: SessionParticipant[] = session
     ? parseSessionParticipants(session.participants)
@@ -241,7 +248,7 @@ export function TabView({
                   {myRemainingCents > 0 ? (
                     <button
                       type="button"
-                      onClick={() => onPayTab?.('my_items')}
+                      onClick={() => handlePay('my_items')}
                       className="w-full min-h-[48px] px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs uppercase tracking-wide flex items-center justify-center gap-2 transition-colors active:scale-[0.99] shadow-xs"
                     >
                       <CreditCard className="size-4" />
@@ -294,7 +301,7 @@ export function TabView({
                 <div className="grid grid-cols-2 gap-2 pt-2 border-t border-zinc-100">
                   <button
                     type="button"
-                    onClick={() => onPayTab?.('split')}
+                    onClick={() => handlePay('split')}
                     className="min-h-[44px] px-3 rounded-xl bg-zinc-100 hover:bg-zinc-200/80 text-zinc-900 text-xs font-bold transition-colors flex items-center justify-center gap-1.5"
                   >
                     <Users className="size-3.5" />
@@ -303,7 +310,7 @@ export function TabView({
 
                   <button
                     type="button"
-                    onClick={() => onPayTab?.('total')}
+                    onClick={() => handlePay('total')}
                     className="min-h-[44px] px-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold transition-colors flex items-center justify-center gap-1.5 shadow-xs"
                   >
                     <CreditCard className="size-3.5" />
