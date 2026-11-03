@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "init:tables": "node scripts/init-tables.mjs",
+    "init:orders": "node scripts/init-orders.mjs",
     "postinstall": "node scripts/patch-next.js"
   },
   "dependencies": {
