@@ -8,9 +8,10 @@ import { formatCentsToBrl } from '@/lib/formatters';
 export interface CartBottomBarProps {
   tableToken?: string;
   onOpenCart: () => void;
+  className?: string;
 }
 
-export function CartBottomBar({ tableToken, onOpenCart }: CartBottomBarProps) {
+export function CartBottomBar({ tableToken, onOpenCart, className }: CartBottomBarProps) {
   const { itemCount, totalCents } = useCartStore(tableToken);
 
   if (itemCount <= 0) {
@@ -20,7 +21,11 @@ export function CartBottomBar({ tableToken, onOpenCart }: CartBottomBarProps) {
   const itemLabel = itemCount === 1 ? '1 item' : `${itemCount} itens`;
 
   return (
-    <div className="fixed inset-x-4 bottom-4 z-40 max-w-lg mx-auto">
+    <div
+      className={`fixed inset-x-4 z-40 max-w-lg mx-auto ${
+        className || 'bottom-4'
+      }`}
+    >
       <button
         type="button"
         onClick={onOpenCart}

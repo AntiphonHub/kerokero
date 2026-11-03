@@ -6,10 +6,12 @@ import {
   getProductsByEstablishment,
   getCategoriesByEstablishment,
 } from '@/lib/appwrite/products';
+import { getTableSession } from '@/lib/appwrite/client-sessions';
+import { listSessionOrders } from '@/lib/appwrite/orders';
 import { getClientSessionAction } from '@/actions/client';
 import { PwaShell } from '@/components/client/pwa-shell';
 import { GateFlow } from '@/components/client/gate-flow';
-import { MenuView } from '@/components/client/menu-view';
+import { ClientApp } from '@/components/client/client-app';
 import { AlertCircle, QrCode } from 'lucide-react';
 
 interface PageProps {
@@ -73,11 +75,13 @@ export default async function ClientTablePage(props: PageProps) {
       ? sessionResult.data
       : null;
 
-  // 5. Se já tem sessão ativa na mesa, exibe a comanda e o Cardápio Digital
+  // 5. Se já tem sessão ativa na mesa, exibe a comanda e o Cardápio Digital integrados
   if (activeSession) {
-    const [products, categories] = await Promise.all([
+    const [products, categories, sessionDoc, sessionOrders] = await Promise.all([
       getProductsByEstablishment(table.establishmentId),
       getCategoriesByEstablishment(table.establishmentId),
+      getTableSession(activeSession.sessionId),
+      listSessionOrders(activeSession.sessionId),
     ]);
 
     return (
@@ -86,13 +90,17 @@ export default async function ClientTablePage(props: PageProps) {
         establishmentName={establishmentName}
         participantName={activeSession.participantName}
       >
-        <MenuView
+        <ClientApp
+          initialSession={sessionDoc}
+          initialOrders={sessionOrders}
           products={products}
           categories={categories}
           tableToken={token}
           tableLabel={tableLabel}
           establishmentName={establishmentName}
-          participantName={activeSession.participantName}
+          currentParticipantId={activeSession.participantId}
+          currentParticipantName={activeSession.participantName}
+          tableNumber={table.number}
         />
       </PwaShell>
     );

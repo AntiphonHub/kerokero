@@ -24,6 +24,8 @@ export interface MenuViewProps {
   tableLabel?: string;
   establishmentName?: string;
   participantName?: string;
+  onOrderSuccess?: () => void;
+  bottomBarOffset?: boolean;
 }
 
 export function MenuView({
@@ -33,6 +35,8 @@ export function MenuView({
   tableLabel,
   establishmentName,
   participantName,
+  onOrderSuccess,
+  bottomBarOffset = false,
 }: MenuViewProps) {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -45,6 +49,7 @@ export function MenuView({
 
   const handleOrderSuccess = () => {
     setOrderSentToast(true);
+    onOrderSuccess?.();
     setTimeout(() => {
       setOrderSentToast(false);
     }, 4000);
@@ -269,7 +274,11 @@ export function MenuView({
       </div>
 
       {/* Floating Bottom Bar when cart has items */}
-      <CartBottomBar tableToken={tableToken} onOpenCart={() => setIsCartOpen(true)} />
+      <CartBottomBar
+        tableToken={tableToken}
+        onOpenCart={() => setIsCartOpen(true)}
+        className={bottomBarOffset ? 'bottom-20' : 'bottom-4'}
+      />
 
       {/* Product Customization Modal */}
       <ProductModal

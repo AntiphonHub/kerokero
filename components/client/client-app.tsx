@@ -1,0 +1,168 @@
+'use client';
+
+import React, { useState, useCallback } from 'react';
+import type { ProductDocument, CategoryDocument } from '@/lib/appwrite/products';
+import type { OrderDocument } from '@/lib/appwrite/orders';
+import type { TableSessionDocument } from '@/lib/appwrite/client-sessions';
+import { getTableTabDataAction } from '@/actions/client';
+import { MenuView } from './menu-view';
+import { TabView } from './tab-view';
+import { ServiceButtons } from './service-buttons';
+import { RealtimeListener } from './realtime-listener';
+import { UtensilsCrossed, Receipt } from 'lucide-react';
+
+export interface ClientAppProps {
+  initialSession: TableSessionDocument | null;
+  initialOrders: OrderDocument[];
+  products: ProductDocument[];
+  categories: CategoryDocument[];
+  tableToken: string;
+  tableLabel?: string;
+  establishmentName?: string;
+  currentParticipantId: string;
+  currentParticipantName: string;
+  tableNumber: number;
+}
+
+export function ClientApp({
+  initialSession,
+  initialOrders,
+  products,
+  categories,
+  tableToken,
+  tableLabel,
+  establishmentName,
+  currentParticipantId,
+  currentParticipantName,
+  tableNumber,
+}: ClientAppProps) {
+  const [activeScreen, setActiveScreen] = useState<'menu' | 'tab'>('menu');
+  const [orders, setOrders] = useState<OrderDocument[]>(initialOrders);
+  const [session, setSession] = useState<TableSessionDocument | null>(initialSession);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Revalidação dos dados da comanda (via WebSocket, visibilidade ou manual)
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      const res = await getTableTabDataAction();
+      if (res.success && res.data) {
+        setOrders(res.data.orders);
+        if (res.data.session) {
+          setSession(res.data.session);
+        }
+      }
+    } catch (err) {
+      console.warn('[ClientApp] Erro ao sincronizar dados da mesa:', err);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, []);
+
+  // Quando um pedido é finalizado com sucesso no carrinho
+  const handleOrderSuccess = useCallback(() => {
+    handleRefresh();
+  }, [handleRefresh]);
+
+  // Ação de pagamento disparada pela comanda (Task 9 integrará modal PIX)
+  const handlePayTab = (mode: 'my_items' | 'split' | 'total') => {
+    // Exibe instrução inicial ou prepara transição para o modal PIX
+    console.info('[ClientApp] Iniciar pagamento:', mode);
+  };
+
+  const activeOrdersCount = orders.filter((o) => o.status !== 'cancelled').length;
+
+  return (
+    <div className="flex flex-col flex-1 relative min-h-full">
+      {/* Realtime WebSocket & Background Polling Listener */}
+      <RealtimeListener
+        sessionId={session?.$id || initialSession?.$id}
+        tableId={session?.tableId}
+        onUpdate={handleRefresh}
+      />
+
+      {/* Quick Services Bar (Chamar Garçom / Pedir Maquininha) */}
+      <div className="bg-white border-b border-zinc-200/80 px-4 py-2 sticky top-14 z-20">
+        <ServiceButtons onServiceCalled={handleRefresh} />
+      </div>
+
+      {/* Screen Views */}
+      <div className="flex-1 flex flex-col">
+        {activeScreen === 'menu' ? (
+          <MenuView
+            products={products}
+            categories={categories}
+            tableToken={tableToken}
+            tableLabel={tableLabel}
+            establishmentName={establishmentName}
+            participantName={currentParticipantName}
+            onOrderSuccess={handleOrderSuccess}
+            bottomBarOffset={true}
+          />
+        ) : (
+          <TabView
+            orders={orders}
+            session={session}
+            currentParticipantId={currentParticipantId}
+            currentParticipantName={currentParticipantName}
+            tableNumber={tableNumber}
+            tableLabel={tableLabel}
+            onRefresh={handleRefresh}
+            isRefreshing={isRefreshing}
+            onPayTab={handlePayTab}
+          />
+        )}
+      </div>
+
+      {/* Fixed Bottom Navigation: Cardápio vs Comanda */}
+      <nav
+        aria-label="Navegação da mesa"
+        className="fixed bottom-0 inset-x-0 z-30 bg-white/95 backdrop-blur-md border-t border-zinc-200/80 safe-area-bottom"
+      >
+        <div className="max-w-lg mx-auto flex items-center justify-around h-16 px-4">
+          {/* Cardápio Button */}
+          <button
+            type="button"
+            onClick={() => setActiveScreen('menu')}
+            className={`flex flex-col items-center justify-center flex-1 min-h-[44px] py-1 transition-colors ${
+              activeScreen === 'menu'
+                ? 'text-zinc-950 font-bold'
+                : 'text-zinc-400 hover:text-zinc-600 font-medium'
+            }`}
+          >
+            <UtensilsCrossed
+              className={`size-5 mb-1 ${activeScreen === 'menu' ? 'stroke-[2.5]' : ''}`}
+            />
+            <span className="text-[11px] tracking-tight">Cardápio</span>
+          </button>
+
+          {/* Divider */}
+          <div className="h-6 w-px bg-zinc-200/80" />
+
+          {/* Comanda Button */}
+          <button
+            type="button"
+            onClick={() => setActiveScreen('tab')}
+            className={`flex flex-col items-center justify-center flex-1 min-h-[44px] py-1 transition-colors relative ${
+              activeScreen === 'tab'
+                ? 'text-zinc-950 font-bold'
+                : 'text-zinc-400 hover:text-zinc-600 font-medium'
+            }`}
+          >
+            <div className="relative">
+              <Receipt
+                className={`size-5 mb-1 ${activeScreen === 'tab' ? 'stroke-[2.5]' : ''}`}
+              />
+              {activeOrdersCount > 0 && (
+                <span className="absolute -top-1.5 -right-3 min-w-[18px] h-[18px] px-1 rounded-full bg-amber-500 text-zinc-950 text-[10px] font-extrabold flex items-center justify-center shadow-2xs">
+                  {activeOrdersCount}
+                </span>
+              )}
+            </div>
+            <span className="text-[11px] tracking-tight">Comanda</span>
+          </button>
+        </div>
+      </nav>
+    </div>
+  );
+}

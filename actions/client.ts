@@ -26,10 +26,12 @@ import {
   getTableSession,
   parseSessionParticipants,
   type TableSessionDocument,
+  type SessionParticipant,
 } from '@/lib/appwrite/client-sessions';
 import {
   createOrder,
   listParticipantOrders,
+  listSessionOrders,
   type OrderDocument,
 } from '@/lib/appwrite/orders';
 import { createAdminClient } from '@/lib/appwrite/server';
@@ -636,3 +638,58 @@ export async function getClientSessionAction(): Promise<
     return { success: true, data: null };
   }
 }
+
+export interface TableTabData {
+  session: TableSessionDocument | null;
+  orders: OrderDocument[];
+  participantId: string;
+  participantName: string;
+  tableNumber: number;
+  tableId: string;
+  establishmentId: string;
+  participants: SessionParticipant[];
+}
+
+/**
+ * Busca dados consolidados da comanda da mesa e pedidos para exibição no PWA do cliente.
+ */
+export async function getTableTabDataAction(): Promise<ActionResult<TableTabData>> {
+  try {
+    const participant = await authenticateParticipant();
+    if (!participant) {
+      return {
+        success: false,
+        message: 'Sessão inválida ou expirada. Escaneie o QR Code novamente.',
+      };
+    }
+
+    const [sessionDoc, orders, table] = await Promise.all([
+      getTableSession(participant.sessionId),
+      listSessionOrders(participant.sessionId),
+      getTableById(participant.tableId),
+    ]);
+
+    const participants = sessionDoc
+      ? parseSessionParticipants(sessionDoc.participants)
+      : [];
+
+    return {
+      success: true,
+      data: {
+        session: sessionDoc,
+        orders,
+        participantId: participant.participantId,
+        participantName: participant.participantName,
+        tableNumber: table?.number ?? 1,
+        tableId: participant.tableId,
+        establishmentId: participant.establishmentId,
+        participants,
+      },
+    };
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error('[getTableTabDataAction] Erro:', msg);
+    return { success: false, message: 'Erro ao buscar dados da comanda.' };
+  }
+}
+
