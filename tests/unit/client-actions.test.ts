@@ -164,7 +164,7 @@ describe('Client Server Actions', () => {
 
     it('allows bypass in development when establishment has no coords', async () => {
       const prevEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'development';
+      (process.env as any).NODE_ENV = 'development';
       mockGetDocument.mockResolvedValueOnce({
         ...mockEstablishment,
         latitude: undefined,
@@ -173,7 +173,7 @@ describe('Client Server Actions', () => {
 
       const res = await validateClientLocation(validToken, null);
       expect(res.success).toBe(true);
-      process.env.NODE_ENV = prevEnv;
+      (process.env as any).NODE_ENV = prevEnv;
     });
   });
 

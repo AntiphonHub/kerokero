@@ -58,6 +58,22 @@ export async function getEstablishmentByUserId(
   return toPlainObject<EstablishmentDocument>(res.documents[0]);
 }
 
+export async function getEstablishmentById(
+  establishmentId: string,
+): Promise<EstablishmentDocument | null> {
+  const { databases } = createAdminClient();
+  try {
+    const doc = await databases.getDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.collections.establishments,
+      establishmentId,
+    );
+    return toPlainObject<EstablishmentDocument>(doc);
+  } catch {
+    return null;
+  }
+}
+
 export async function saveStoreDataStep(
   userId: string,
   data: StoreDataOutput,

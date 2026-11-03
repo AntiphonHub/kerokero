@@ -64,7 +64,7 @@ const cartItemInputSchema = z.object({
   unitPrice: z.number().int().nonnegative('Preço unitário deve ser maior ou igual a zero'),
   quantity: z.number().int().positive('Quantidade deve ser pelo menos 1'),
   notes: z.string().max(500, 'Observação não pode exceder 500 caracteres').optional(),
-  selectedOptions: z.union([z.string(), z.record(z.unknown()), z.array(z.unknown())]).optional(),
+  selectedOptions: z.union([z.string(), z.record(z.string(), z.unknown()), z.array(z.unknown())]).optional(),
 });
 
 /**
@@ -309,7 +309,7 @@ export async function submitOrderAction(
       return {
         success: false,
         message: 'Itens do pedido inválidos.',
-        errors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
+        errors: parsed.error.flatten().fieldErrors as unknown as Record<string, string[]>,
       };
     }
 

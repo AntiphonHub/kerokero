@@ -5,6 +5,7 @@ import {
 } from '@/lib/schemas/client-session';
 
 export const PARTICIPANT_COOKIE_NAME = 'kerokero_participant';
+export type { ParticipantSessionPayload };
 
 // Validade padrão da sessão: 24 horas (em ms)
 export const DEFAULT_SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000;
