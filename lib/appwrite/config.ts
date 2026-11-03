@@ -11,5 +11,6 @@ export const appwriteConfig = {
     tables: process.env.APPWRITE_TABLES_COLLECTION_ID || 'tables',
     tableSessions: process.env.APPWRITE_TABLE_SESSIONS_COLLECTION_ID || 'table_sessions',
     serviceCalls: process.env.APPWRITE_SERVICE_CALLS_COLLECTION_ID || 'service_calls',
+    orders: process.env.APPWRITE_ORDERS_COLLECTION_ID || 'orders',
   },
 } as const;
