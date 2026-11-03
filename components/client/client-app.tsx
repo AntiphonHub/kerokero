@@ -107,9 +107,9 @@ export function ClientApp({
     const resolvedAmountCents =
       receiptData?.amountCents ??
       (currentParticipant?.paidAmount
-        ? Math.round(currentParticipant.paidAmount * 100)
+        ? Math.round(currentParticipant.paidAmount)
         : session?.totalAmount
-          ? Math.round(session.totalAmount * 100)
+          ? Math.round(session.totalAmount)
           : 0);
 
     const handleFinish = async () => {
