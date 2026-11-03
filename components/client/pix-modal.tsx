@@ -311,7 +311,7 @@ function PixModalInner({
               <h2 id="pix-modal-title" className="text-base font-bold text-zinc-900 tracking-tight">
                 {step === 'mode_select' && 'Pagar comanda'}
                 {step === 'payment_method' && 'Forma de Pagamento'}
-                {step === 'cpf_input' && 'Identificação do Pagador'}
+                {step === 'cpf_input' && 'Pagamento via PIX'}
                 {step === 'qr_code' && 'Aguardando Pagamento'}
                 {step === 'card_requested' && 'Solicitação Enviada'}
               </h2>
@@ -606,38 +606,14 @@ function PixModalInner({
           {/* STEP 2: DIGITAÇÃO DO CPF */}
           {step === 'cpf_input' && (
             <div className="space-y-4">
-              {/* Resumo da Opção Escolhida */}
-              <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80 flex items-center justify-between">
-                <div>
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
-                    Modalidade
-                  </span>
-                  <span className="text-xs font-bold text-zinc-900">
-                    {PIX_MODE_DETAILS[selectedMode].label}
-                  </span>
-                </div>
-                <div className="text-right">
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
-                    Valor a Pagar
-                  </span>
-                  <span className="text-sm font-bold text-amber-600">
-                    {formatPriceCents(targetAmountCents)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Informação sobre exigência do CPF */}
-              <div className="space-y-1.5">
+              {/* Campo de CPF */}
+              <div className="space-y-2">
                 <label
                   htmlFor="payer-cpf-input"
                   className="text-xs font-bold text-zinc-800 block"
                 >
-                  CPF do Titular da Conta PIX
+                  Por favor, informe o CPF
                 </label>
-                <p className="text-[11px] text-zinc-500 leading-relaxed">
-                  O Banco Central e o gateway de pagamento exigem o CPF para emissão da chave
-                  PIX nominal em tempo real.
-                </p>
 
                 <input
                   id="payer-cpf-input"
