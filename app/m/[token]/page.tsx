@@ -1,4 +1,5 @@
 import React from 'react';
+import { connection } from 'next/server';
 import { isValidTableToken } from '@/lib/security/table-token';
 import { getTableByToken } from '@/lib/appwrite/tables';
 import { getEstablishmentById } from '@/lib/appwrite/establishments';
@@ -19,6 +20,7 @@ interface PageProps {
 }
 
 export default async function ClientTablePage(props: PageProps) {
+  await connection();
   const resolvedParams = await props.params;
   const token = resolvedParams?.token;
 
