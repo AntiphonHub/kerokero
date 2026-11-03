@@ -696,3 +696,18 @@ export async function getTableTabDataAction(): Promise<ActionResult<TableTabData
   }
 }
 
+/**
+ * Remove o cookie de sessão do participante na mesa para permitir novo escaneamento/entrada.
+ */
+export async function clearClientSessionAction(): Promise<ActionResult<{ cleared: boolean }>> {
+  try {
+    const cookieStore = await cookies();
+    cookieStore.delete(PARTICIPANT_COOKIE_NAME);
+    return { success: true, data: { cleared: true } };
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error('[clearClientSessionAction] Erro:', msg);
+    return { success: false, message: 'Falha ao encerrar sessão local do cliente.' };
+  }
+}
+

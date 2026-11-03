@@ -12,6 +12,10 @@ import {
   ServiceCallDocument,
 } from '@/lib/appwrite/tables';
 import { TableStatus } from '@/lib/schemas/table';
+import {
+  closeAndSettleEntireTableSession,
+  type TableSessionDocument,
+} from '@/lib/appwrite/client-sessions';
 
 export interface ActionResponse<T = unknown> {
   success: boolean;
@@ -141,5 +145,42 @@ export async function getTableDetailsAction(tableId: string): Promise<{
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : String(error);
     return { success: false, message: msg || 'Erro ao carregar detalhes da mesa.' };
+  }
+}
+
+
+/**
+ * Quita a comanda e encerra a sessão da mesa (ex: garçom marcou como pago na maquininha).
+ */
+export async function settleAndCloseTableAction(
+  tableId: string,
+): Promise<ActionResponse<{ table: TableDocument; session: TableSessionDocument | null }>> {
+  try {
+    const user = await getLoggedInUser();
+    if (!user) {
+      return { success: false, message: 'Sessão expirada.' };
+    }
+
+    const establishment = await getEstablishmentByUserId(user.$id);
+    if (!establishment) {
+      return { success: false, message: 'Estabelecimento não encontrado.' };
+    }
+
+    const table = await getTableById(tableId);
+    if (!table || table.establishmentId !== establishment.$id) {
+      return { success: false, message: 'Mesa não encontrada ou não pertence ao seu restaurante.' };
+    }
+
+    const result = await closeAndSettleEntireTableSession(tableId);
+
+    return {
+      success: true,
+      message: 'Comanda quitada e mesa liberada com sucesso!',
+      data: result,
+    };
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error('[Tables Action] Erro ao quitar comanda:', msg);
+    return { success: false, message: msg || 'Erro ao quitar comanda da mesa.' };
   }
 }

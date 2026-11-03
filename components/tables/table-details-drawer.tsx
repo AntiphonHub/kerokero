@@ -5,9 +5,23 @@ import { TableDocument, ServiceCallDocument } from '@/lib/appwrite/tables';
 import { TableStatus } from '@/lib/schemas/table';
 import { statusConfig } from './table-card';
 import { formatCurrency } from '@/lib/formatters';
-import { getTableDetailsAction, resolveServiceCallAction, resetTableAction } from '@/actions/tables';
+import {
+  getTableDetailsAction,
+  resolveServiceCallAction,
+  resetTableAction,
+  settleAndCloseTableAction,
+} from '@/actions/tables';
 import { Button } from '@/components/ui/button';
-import { X, Bell, Check, RotateCcw, ShieldCheck, QrCode } from 'lucide-react';
+import {
+  X,
+  Bell,
+  Check,
+  CheckCircle2,
+  CreditCard,
+  RotateCcw,
+  ShieldCheck,
+  QrCode,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface TableDetailsDrawerProps {
@@ -90,6 +104,32 @@ export function TableDetailsDrawer({
     }
   };
 
+  const handleSettleTable = async () => {
+    if (
+      !confirm(
+        `Confirmar recebimento na maquininha e encerrar a comanda da ${table.label}? Todos os clientes da mesa terão a conta quitada e a sessão encerrada.`,
+      )
+    ) {
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      const res = await settleAndCloseTableAction(table.$id);
+      if (res.success && res.data) {
+        onTableUpdated(res.data.table);
+        setServiceCalls([]);
+        onClose();
+      } else {
+        alert(res.message || 'Erro ao quitar comanda da mesa.');
+      }
+    } catch {
+      alert('Erro de conexão ao encerrar a mesa.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const tableUrl = `${appBaseUrl}/m/${table.token}`;
 
   return (
@@ -138,19 +178,33 @@ export function TableDetailsDrawer({
         {/* Content Body */}
         <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-6">
           {/* Resumo Financeiro da Mesa */}
-          <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-100">
-            <span className="text-xs font-medium text-zinc-400 uppercase tracking-wide block">
-              Total Acumulado na Comanda
-            </span>
-            <div className="mt-1 flex items-baseline justify-between">
-              <span className="text-2xl font-black text-zinc-900 tracking-tight">
-                {formatCurrency(table.currentTotal || 0)}
+          <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-100 space-y-3">
+            <div>
+              <span className="text-xs font-medium text-zinc-400 uppercase tracking-wide block">
+                Total Acumulado na Comanda
               </span>
-              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-zinc-500">
-                <ShieldCheck className="w-3.5 h-3.5 text-zinc-400" />
-                Sessão 100% Indoor
-              </span>
+              <div className="mt-1 flex items-baseline justify-between">
+                <span className="text-2xl font-black text-zinc-900 tracking-tight">
+                  {formatCurrency(table.currentTotal || 0)}
+                </span>
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-zinc-500">
+                  <ShieldCheck className="w-3.5 h-3.5 text-zinc-400" />
+                  Sessão 100% Indoor
+                </span>
+              </div>
             </div>
+
+            {currentStatus !== 'idle' && (
+              <Button
+                type="button"
+                disabled={isProcessing}
+                onClick={handleSettleTable}
+                className="w-full h-10 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl gap-2 shadow-xs cursor-pointer transition-all active:scale-[0.99]"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Marcar como Pago & Fechar Comanda</span>
+              </Button>
+            )}
           </div>
 
           {/* Chamados Pendentes */}
@@ -191,15 +245,33 @@ export function TableDetailsDrawer({
                       </div>
                     </div>
 
-                    <Button
-                      size="sm"
-                      disabled={isProcessing}
-                      onClick={() => handleResolveCall(call.$id)}
-                      className="h-8 text-xs font-semibold bg-amber-500 hover:bg-amber-600 text-white rounded-lg px-2.5 gap-1 cursor-pointer shrink-0 shadow-2xs transition-colors"
-                    >
-                      <Check className="w-3.5 h-3.5" />
-                      Atender
-                    </Button>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {call.type === 'bill_card' && (
+                        <Button
+                          size="sm"
+                          disabled={isProcessing}
+                          onClick={handleSettleTable}
+                          className="h-8 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg px-2.5 gap-1 cursor-pointer shrink-0 shadow-2xs transition-colors"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          Marcar Pago
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        disabled={isProcessing}
+                        onClick={() => handleResolveCall(call.$id)}
+                        className={cn(
+                          "h-8 text-xs font-semibold rounded-lg px-2.5 gap-1 cursor-pointer shrink-0 shadow-2xs transition-colors",
+                          call.type === 'bill_card'
+                            ? "bg-zinc-100 hover:bg-zinc-200 text-zinc-700"
+                            : "bg-amber-500 hover:bg-amber-600 text-white"
+                        )}
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                        Atender
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>

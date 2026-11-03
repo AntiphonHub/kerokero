@@ -4,7 +4,8 @@ import React, { useState, useCallback } from 'react';
 import type { ProductDocument, CategoryDocument } from '@/lib/appwrite/products';
 import type { OrderDocument } from '@/lib/appwrite/orders';
 import type { TableSessionDocument } from '@/lib/appwrite/client-sessions';
-import { getTableTabDataAction } from '@/actions/client';
+import { parseSessionParticipants } from '@/lib/utils/tab';
+import { getTableTabDataAction, clearClientSessionAction } from '@/actions/client';
 import { MenuView } from './menu-view';
 import { TabView } from './tab-view';
 import { RealtimeListener } from './realtime-listener';
@@ -93,19 +94,47 @@ export function ClientApp({
     setReceiptData(data);
   };
 
-  // Se o participante concluiu o pagamento, exibe tela de comprovante quitado
-  if (receiptData) {
+  // Se o participante concluiu o pagamento via PIX ou se o garçom quitou e fechou a mesa no painel
+  const isSessionClosed = session?.status === 'closed' || initialSession?.status === 'closed';
+
+  if (receiptData || isSessionClosed) {
+    const currentParticipant = session?.participants
+      ? parseSessionParticipants(session.participants).find(
+          (p) => p.id === currentParticipantId || p.name === currentParticipantName,
+        )
+      : null;
+
+    const resolvedAmountCents =
+      receiptData?.amountCents ??
+      (currentParticipant?.paidAmount
+        ? Math.round(currentParticipant.paidAmount * 100)
+        : session?.totalAmount
+          ? Math.round(session.totalAmount * 100)
+          : 0);
+
+    const handleFinish = async () => {
+      try {
+        await clearClientSessionAction();
+      } catch (err) {
+        console.warn('[ClientApp] Erro ao limpar sessão local:', err);
+      }
+      window.location.reload();
+    };
+
     return (
       <ReceiptView
-        amountCents={receiptData.amountCents}
-        mode={receiptData.mode}
+        amountCents={resolvedAmountCents}
+        mode={receiptData?.mode ?? 'total'}
+        paymentMethodLabel={
+          receiptData
+            ? 'Liquidado via PIX Dinâmico'
+            : 'Liquidado na Maquininha / Garçom'
+        }
         participantName={currentParticipantName}
         tableNumber={tableNumber}
         tableLabel={tableLabel}
-        paidAt={receiptData.paidAt}
-        onFinish={() => {
-          window.location.reload();
-        }}
+        paidAt={receiptData?.paidAt ?? session?.closedAt ?? new Date().toISOString()}
+        onFinish={handleFinish}
       />
     );
   }

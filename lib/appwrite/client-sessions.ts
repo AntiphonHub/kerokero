@@ -2,7 +2,8 @@ import crypto from 'node:crypto';
 import { ID, Query, Models } from 'node-appwrite';
 import { createAdminClient } from './server';
 import { appwriteConfig } from './config';
-import { resetTableSession } from './tables';
+import { resetTableSession, type TableDocument } from './tables';
+import type { OrderDocument } from './orders';
 
 export interface SessionParticipant {
   id: string;
@@ -285,4 +286,132 @@ export async function getActiveTableSession(tableId: string): Promise<TableSessi
   } catch {
     return null;
   }
+}
+
+
+/**
+ * Quita 100% da comanda da mesa, marca todos os participantes como pagos e encerra a sessão.
+ * Também conclui os chamados pendentes e libera a mesa de volta para idle.
+ */
+export async function closeAndSettleEntireTableSession(
+  tableId: string,
+): Promise<{ table: TableDocument; session: TableSessionDocument | null }> {
+  const { databases } = createAdminClient();
+
+  // 1. Busca a mesa
+  const tableDoc = await databases.getDocument(
+    appwriteConfig.databaseId,
+    appwriteConfig.collections.tables,
+    tableId,
+  );
+
+  let sessionDoc: Models.Document | null = null;
+
+  // Busca a sessão ativa
+  if (tableDoc.activeSessionId) {
+    try {
+      sessionDoc = await databases.getDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.collections.tableSessions,
+        tableDoc.activeSessionId,
+      );
+    } catch {
+      sessionDoc = null;
+    }
+  }
+
+  if (!sessionDoc) {
+    // Tenta buscar por tableId com status 'open'
+    const openSessions = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.collections.tableSessions,
+      [Query.equal('tableId', tableId), Query.equal('status', 'open'), Query.limit(1)],
+    );
+    if (openSessions.documents.length > 0) {
+      sessionDoc = openSessions.documents[0];
+    }
+  }
+
+  let updatedSession: TableSessionDocument | null = null;
+
+  if (sessionDoc) {
+    const sessionObj = toPlainObject<TableSessionDocument>(sessionDoc);
+    const participants = parseSessionParticipants(sessionObj.participants);
+
+    // Busca os pedidos da sessão para calcular os valores exatos de cada participante
+    let orders: OrderDocument[] = [];
+    try {
+      const ordersRes = await databases.listDocuments(
+        appwriteConfig.databaseId,
+        appwriteConfig.collections.orders,
+        [Query.equal('sessionId', sessionObj.$id), Query.limit(100)],
+      );
+      orders = toPlainObject<OrderDocument[]>(ordersRes.documents);
+    } catch {}
+
+    const calculatedTotal = orders
+      .filter((o) => o.status !== 'cancelled')
+      .reduce((acc, o) => acc + (o.totalPrice || o.unitPrice * o.quantity), 0);
+
+    const finalTotal = sessionObj.totalAmount > 0 ? sessionObj.totalAmount : calculatedTotal;
+
+    // Marca todos os participantes como pagos
+    const settledParticipants = participants.map((p) => {
+      const participantOrders = orders.filter(
+        (o) => o.participantId === p.id && o.status !== 'cancelled',
+      );
+      const participantTotal = participantOrders.reduce(
+        (acc, o) => acc + (o.totalPrice || o.unitPrice * o.quantity),
+        0,
+      );
+      return {
+        ...p,
+        isPaid: true,
+        paidAmount: Math.max(p.paidAmount || 0, participantTotal),
+      };
+    });
+
+    const updated = await databases.updateDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.collections.tableSessions,
+      sessionObj.$id,
+      {
+        status: 'closed',
+        closedAt: new Date().toISOString(),
+        totalAmount: finalTotal,
+        paidAmount: finalTotal,
+        participants: JSON.stringify(settledParticipants),
+      },
+    );
+
+    updatedSession = toPlainObject<TableSessionDocument>(updated);
+  }
+
+  // 2. Conclui todos os chamados pendentes da mesa
+  try {
+    const pendingCalls = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.collections.serviceCalls,
+      [Query.equal('tableId', tableId), Query.equal('status', 'pending'), Query.limit(50)],
+    );
+
+    for (const call of pendingCalls.documents) {
+      await databases.updateDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.collections.serviceCalls,
+        call.$id,
+        { status: 'completed' },
+      );
+    }
+  } catch (err) {
+    console.warn('[closeAndSettleEntireTableSession] Falha ao resolver chamados:', err);
+  }
+
+  // 3. Reseta e libera a mesa de volta para 'idle'
+  const updatedTable = await resetTableSession(tableId);
+
+  return {
+    table: updatedTable,
+    session: updatedSession,
+  };
 }

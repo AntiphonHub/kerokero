@@ -1,9 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+vi.mock('server-only', () => ({}));
+
 import {
   syncTablesAction,
   resolveServiceCallAction,
   resetTableAction,
   getTableDetailsAction,
+  settleAndCloseTableAction,
 } from '@/actions/tables';
 
 // Mocks
@@ -14,6 +18,7 @@ const mockResolveServiceCall = vi.fn();
 const mockResetTableSession = vi.fn();
 const mockGetTableById = vi.fn();
 const mockListTableServiceCalls = vi.fn();
+const mockCloseAndSettleEntireTableSession = vi.fn();
 
 vi.mock('@/lib/appwrite/session', () => ({
   getLoggedInUser: () => mockGetLoggedInUser(),
@@ -29,6 +34,11 @@ vi.mock('@/lib/appwrite/tables', () => ({
   resetTableSession: (...args: any[]) => mockResetTableSession(...args),
   getTableById: (...args: any[]) => mockGetTableById(...args),
   listTableServiceCalls: (...args: any[]) => mockListTableServiceCalls(...args),
+}));
+
+vi.mock('@/lib/appwrite/client-sessions', () => ({
+  closeAndSettleEntireTableSession: (...args: any[]) =>
+    mockCloseAndSettleEntireTableSession(...args),
 }));
 
 describe('Tables Server Actions', () => {
@@ -98,6 +108,30 @@ describe('Tables Server Actions', () => {
       expect(res.success).toBe(true);
       expect(res.table?.number).toBe(1);
       expect(res.serviceCalls?.length).toBe(1);
+    });
+  });
+
+  describe('settleAndCloseTableAction', () => {
+    it('returns error if user is unauthenticated', async () => {
+      mockGetLoggedInUser.mockResolvedValueOnce(null);
+      const res = await settleAndCloseTableAction('t1');
+      expect(res.success).toBe(false);
+      expect(res.message).toMatch(/sessão expirada/i);
+    });
+
+    it('settles table, marks all participants paid and resets table to idle', async () => {
+      mockGetLoggedInUser.mockResolvedValueOnce({ $id: 'u1' });
+      mockGetEstablishmentByUserId.mockResolvedValueOnce({ $id: 'est_1' });
+      mockGetTableById.mockResolvedValueOnce({ $id: 't1', establishmentId: 'est_1' });
+      mockCloseAndSettleEntireTableSession.mockResolvedValueOnce({
+        table: { $id: 't1', status: 'idle', currentTotal: 0 },
+        session: { $id: 'sess_1', status: 'closed' },
+      });
+
+      const res = await settleAndCloseTableAction('t1');
+      expect(res.success).toBe(true);
+      expect(mockCloseAndSettleEntireTableSession).toHaveBeenCalledWith('t1');
+      expect(res.data?.table.status).toBe('idle');
     });
   });
 });

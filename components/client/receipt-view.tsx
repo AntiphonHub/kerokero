@@ -12,6 +12,7 @@ export interface ReceiptViewProps {
   tableNumber: number;
   tableLabel?: string;
   paidAt: string;
+  paymentMethodLabel?: string;
   onFinish?: () => void;
 }
 
@@ -22,6 +23,7 @@ export function ReceiptView({
   tableNumber,
   tableLabel,
   paidAt,
+  paymentMethodLabel,
   onFinish,
 }: ReceiptViewProps) {
   const formattedDate = new Date(paidAt).toLocaleString('pt-BR', {
@@ -76,7 +78,7 @@ export function ReceiptView({
             {formatPriceCents(amountCents)}
           </span>
           <span className="text-[11px] text-zinc-400 block">
-            Liquidado via PIX Dinâmico
+            {paymentMethodLabel || 'Liquidado via PIX Dinâmico'}
           </span>
         </div>
 
