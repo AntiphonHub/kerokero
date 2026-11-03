@@ -8,6 +8,7 @@ import type { ServiceCallDocument } from '@/lib/appwrite/tables';
 export interface ServiceButtonsProps {
   className?: string;
   onServiceCalled?: (callDoc?: ServiceCallDocument) => void;
+  variant?: 'full' | 'bell-round';
 }
 
 const WAITER_PRESETS = [
@@ -15,12 +16,17 @@ const WAITER_PRESETS = [
   'Talher / Prato',
   'Limpar mesa',
   'Dúvida no pedido',
+  'Pedir maquininha',
   'Outro',
 ] as const;
 
 const CARD_PRESETS = ['Crédito', 'Débito', 'Refeição / VR'] as const;
 
-export function ServiceButtons({ className = '', onServiceCalled }: ServiceButtonsProps) {
+export function ServiceButtons({
+  className = '',
+  onServiceCalled,
+  variant = 'bell-round',
+}: ServiceButtonsProps) {
   const [modalType, setModalType] = useState<'waiter' | 'card' | null>(null);
   const [selectedPreset, setSelectedPreset] = useState<string>('');
   const [customReason, setCustomReason] = useState<string>('');
@@ -49,16 +55,20 @@ export function ServiceButtons({ className = '', onServiceCalled }: ServiceButto
   const handleSubmit = async () => {
     if (isSubmitting) return;
 
-    let reason = selectedPreset;
+    let reason: string = selectedPreset;
+    let type: 'waiter' | 'bill_card' = modalType === 'card' ? 'bill_card' : 'waiter';
+
     if (modalType === 'waiter' && selectedPreset === 'Outro') {
       reason = customReason.trim() || 'Outro motivo';
+    } else if (modalType === 'waiter' && selectedPreset === 'Pedir maquininha') {
+      type = 'bill_card';
+      reason = 'Maquininha na mesa';
     } else if (modalType === 'card') {
       reason = `Maquininha: ${selectedPreset}`;
     }
 
     setIsSubmitting(true);
     try {
-      const type = modalType === 'card' ? 'bill_card' : 'waiter';
       const res = await callWaiterAction(reason, type);
 
       if (res.success) {
@@ -92,26 +102,37 @@ export function ServiceButtons({ className = '', onServiceCalled }: ServiceButto
 
   return (
     <>
-      {/* Quick Action Floating Bar / Triggers */}
-      <div className={`flex items-center gap-2 ${className}`}>
+      {/* Quick Action Trigger */}
+      {variant === 'bell-round' ? (
         <button
           type="button"
           onClick={handleOpenWaiterModal}
-          className="flex-1 min-h-[44px] px-3.5 rounded-xl bg-white border border-zinc-200/90 text-zinc-800 text-xs font-semibold shadow-xs hover:bg-zinc-50 hover:border-zinc-300 transition-all flex items-center justify-center gap-2 active:scale-[0.99]"
+          aria-label="Chamar Garçom"
+          className={`size-11 rounded-full border border-zinc-200/90 bg-white text-zinc-700 hover:bg-zinc-50 hover:text-amber-600 hover:border-amber-300 active:scale-95 transition-all flex items-center justify-center shrink-0 shadow-xs ${className}`}
         >
-          <Bell className="size-4 text-amber-500 shrink-0" />
-          <span>Chamar Garçom</span>
+          <Bell className="size-5 text-amber-500" />
         </button>
+      ) : (
+        <div className={`flex items-center gap-2 ${className}`}>
+          <button
+            type="button"
+            onClick={handleOpenWaiterModal}
+            className="flex-1 min-h-[44px] px-3.5 rounded-xl bg-white border border-zinc-200/90 text-zinc-800 text-xs font-semibold shadow-xs hover:bg-zinc-50 hover:border-zinc-300 transition-all flex items-center justify-center gap-2 active:scale-[0.99]"
+          >
+            <Bell className="size-4 text-amber-500 shrink-0" />
+            <span>Chamar Garçom</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={handleOpenCardModal}
-          className="flex-1 min-h-[44px] px-3.5 rounded-xl bg-white border border-zinc-200/90 text-zinc-800 text-xs font-semibold shadow-xs hover:bg-zinc-50 hover:border-zinc-300 transition-all flex items-center justify-center gap-2 active:scale-[0.99]"
-        >
-          <CreditCard className="size-4 text-zinc-700 shrink-0" />
-          <span>Pedir Maquininha</span>
-        </button>
-      </div>
+          <button
+            type="button"
+            onClick={handleOpenCardModal}
+            className="flex-1 min-h-[44px] px-3.5 rounded-xl bg-white border border-zinc-200/90 text-zinc-800 text-xs font-semibold shadow-xs hover:bg-zinc-50 hover:border-zinc-300 transition-all flex items-center justify-center gap-2 active:scale-[0.99]"
+          >
+            <CreditCard className="size-4 text-zinc-700 shrink-0" />
+            <span>Pedir Maquininha</span>
+          </button>
+        </div>
+      )}
 
       {/* Floating Feedback Notification */}
       {feedback && (

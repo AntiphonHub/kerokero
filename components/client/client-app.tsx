@@ -7,7 +7,6 @@ import type { TableSessionDocument } from '@/lib/appwrite/client-sessions';
 import { getTableTabDataAction } from '@/actions/client';
 import { MenuView } from './menu-view';
 import { TabView } from './tab-view';
-import { ServiceButtons } from './service-buttons';
 import { RealtimeListener } from './realtime-listener';
 import { PixModal } from './pix-modal';
 import { ReceiptView } from './receipt-view';
@@ -122,11 +121,6 @@ export function ClientApp({
         onUpdate={handleRefresh}
       />
 
-      {/* Quick Services Bar (Chamar Garçom / Pedir Maquininha) */}
-      <div className="bg-white border-b border-zinc-200/80 px-4 py-2 sticky top-14 z-20">
-        <ServiceButtons onServiceCalled={handleRefresh} />
-      </div>
-
       {/* Screen Views */}
       <div className="flex-1 flex flex-col">
         {activeScreen === 'menu' ? (
@@ -138,6 +132,7 @@ export function ClientApp({
             establishmentName={establishmentName}
             participantName={currentParticipantName}
             onOrderSuccess={handleOrderSuccess}
+            onServiceCalled={handleRefresh}
             bottomBarOffset={true}
           />
         ) : (

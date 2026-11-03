@@ -14,6 +14,7 @@ import { formatCentsToBrl } from '@/lib/formatters';
 import { ProductModal } from './product-modal';
 import { CartBottomBar } from './cart-bottom-bar';
 import { CartSheet } from './cart-sheet';
+import { ServiceButtons } from './service-buttons';
 
 export interface MenuViewProps {
   products: ProductDocument[];
@@ -23,6 +24,7 @@ export interface MenuViewProps {
   establishmentName?: string;
   participantName?: string;
   onOrderSuccess?: () => void;
+  onServiceCalled?: () => void;
   bottomBarOffset?: boolean;
 }
 
@@ -34,6 +36,7 @@ export function MenuView({
   establishmentName,
   participantName,
   onOrderSuccess,
+  onServiceCalled,
   bottomBarOffset = false,
 }: MenuViewProps) {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all');
@@ -55,51 +58,36 @@ export function MenuView({
 
   return (
     <div className="flex flex-col flex-1 pb-24">
-      {/* Table & Session Header Banner */}
+      {/* Search Bar & Round Bell Waiter Button */}
       <div className="p-4 bg-white border-b border-zinc-200/80">
-        <div className="flex items-center justify-between">
-          <div className="min-w-0">
-            <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider block">
-              {establishmentName || 'Cardápio Digital'}
-            </span>
-            <h1 className="text-lg font-bold text-zinc-900 tracking-tight truncate">
-              {tableLabel || 'Sua Mesa'}
-            </h1>
+        <div className="flex items-center gap-2.5">
+          <div className="relative flex-1">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-400">
+              <Search className="size-4" />
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Buscar pratos, bebidas e porções..."
+              className="w-full h-11 pl-9 pr-9 text-xs rounded-xl border border-zinc-200 bg-zinc-50 text-zinc-900 placeholder:text-zinc-400 focus:outline-hidden focus:ring-1 focus:ring-zinc-900 focus:bg-white transition-all"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                aria-label="Limpar busca"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-zinc-400 hover:text-zinc-600"
+              >
+                <X className="size-4" />
+              </button>
+            )}
           </div>
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60 shrink-0">
-            <CheckCircle2 className="size-3.5" />
-            <span>Comanda Ativa</span>
-          </div>
-        </div>
 
-        {participantName && (
-          <p className="text-xs text-zinc-500 mt-1">
-            Conectado como <strong className="text-zinc-800">{participantName}</strong>
-          </p>
-        )}
-
-        {/* Search Bar */}
-        <div className="mt-3 relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-400">
-            <Search className="size-4" />
-          </div>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Buscar pratos, bebidas e porções..."
-            className="w-full h-11 pl-9 pr-9 text-xs rounded-xl border border-zinc-200 bg-zinc-50 text-zinc-900 placeholder:text-zinc-400 focus:outline-hidden focus:ring-1 focus:ring-zinc-900 focus:bg-white transition-all"
+          <ServiceButtons
+            variant="bell-round"
+            onServiceCalled={onServiceCalled}
           />
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={() => setSearchQuery('')}
-              aria-label="Limpar busca"
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-zinc-400 hover:text-zinc-600"
-            >
-              <X className="size-4" />
-            </button>
-          )}
         </div>
       </div>
 
