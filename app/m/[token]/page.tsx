@@ -2,10 +2,15 @@ import React from 'react';
 import { isValidTableToken } from '@/lib/security/table-token';
 import { getTableByToken } from '@/lib/appwrite/tables';
 import { getEstablishmentById } from '@/lib/appwrite/establishments';
+import {
+  getProductsByEstablishment,
+  getCategoriesByEstablishment,
+} from '@/lib/appwrite/products';
 import { getClientSessionAction } from '@/actions/client';
 import { PwaShell } from '@/components/client/pwa-shell';
 import { GateFlow } from '@/components/client/gate-flow';
-import { AlertCircle, QrCode, CheckCircle2, Clock } from 'lucide-react';
+import { MenuView } from '@/components/client/menu-view';
+import { AlertCircle, QrCode } from 'lucide-react';
 
 interface PageProps {
   params: Promise<{ token: string }> | { token: string };
@@ -68,46 +73,27 @@ export default async function ClientTablePage(props: PageProps) {
       ? sessionResult.data
       : null;
 
-  // 5. Se já tem sessão ativa na mesa, exibe a comanda aberta (Pronta para o Menu/Cardápio)
+  // 5. Se já tem sessão ativa na mesa, exibe a comanda e o Cardápio Digital
   if (activeSession) {
+    const [products, categories] = await Promise.all([
+      getProductsByEstablishment(table.establishmentId),
+      getCategoriesByEstablishment(table.establishmentId),
+    ]);
+
     return (
       <PwaShell
         tableLabel={tableLabel}
         establishmentName={establishmentName}
         participantName={activeSession.participantName}
       >
-        <div className="flex flex-col flex-1 p-4 animate-in fade-in duration-300">
-          {/* Banner de Sessão Ativa */}
-          <div className="rounded-2xl bg-white border border-zinc-200/80 p-5 shadow-xs mb-4">
-            <div className="flex items-center justify-between mb-3">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
-                <CheckCircle2 className="size-3.5" />
-                Comanda Ativa
-              </span>
-              <span className="text-xs text-zinc-400 flex items-center gap-1">
-                <Clock className="size-3" />
-                Em andamento
-              </span>
-            </div>
-
-            <h2 className="text-lg font-bold text-zinc-900">
-              Olá, {activeSession.participantName}!
-            </h2>
-            <p className="text-xs text-zinc-500 mt-1">
-              Você está conectado à {tableLabel}. Seus pedidos e divisões de conta serão sincronizados em tempo real.
-            </p>
-          </div>
-
-          {/* Placeholder para Menu Digital e Comanda (Task 7 & 8) */}
-          <div className="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-zinc-200 rounded-2xl p-6 text-center text-zinc-400">
-            <p className="text-sm font-medium text-zinc-600">
-              Cardápio Digital
-            </p>
-            <p className="text-xs text-zinc-400 mt-1 max-w-xs">
-              Selecione produtos, personalize pedidos e envie direto para a cozinha.
-            </p>
-          </div>
-        </div>
+        <MenuView
+          products={products}
+          categories={categories}
+          tableToken={token}
+          tableLabel={tableLabel}
+          establishmentName={establishmentName}
+          participantName={activeSession.participantName}
+        />
       </PwaShell>
     );
   }
