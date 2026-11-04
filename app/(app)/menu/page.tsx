@@ -32,10 +32,27 @@ export default async function MenuPage() {
     getCategoriesByEstablishment(establishment.$id),
   ]);
 
+  let happyDays: string[] = ['qua', 'qui', 'sex'];
+  if (establishment.happyHourDays) {
+    try {
+      happyDays = JSON.parse(establishment.happyHourDays);
+    } catch {
+      // fallback
+    }
+  }
+
+  const happyHourConfig = {
+    enabled: Boolean(establishment.happyHourEnabled),
+    days: happyDays,
+    startTime: establishment.happyHourStartTime || '17:00',
+    endTime: establishment.happyHourEndTime || '20:00',
+  };
+
   return (
     <MenuView
       initialProducts={products}
       initialCategories={categories}
+      initialHappyHourConfig={happyHourConfig}
     />
   );
 }

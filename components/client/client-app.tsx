@@ -25,6 +25,7 @@ export interface ClientAppProps {
   currentParticipantId: string;
   currentParticipantName: string;
   tableNumber: number;
+  isHappyHour?: boolean;
 }
 
 export function ClientApp({
@@ -38,6 +39,7 @@ export function ClientApp({
   currentParticipantId,
   currentParticipantName,
   tableNumber,
+  isHappyHour = false,
 }: ClientAppProps) {
   const [activeScreen, setActiveScreen] = useState<'menu' | 'tab'>('menu');
   const [orders, setOrders] = useState<OrderDocument[]>(initialOrders);
@@ -163,6 +165,7 @@ export function ClientApp({
             onOrderSuccess={handleOrderSuccess}
             onServiceCalled={handleRefresh}
             bottomBarOffset={true}
+            isHappyHour={isHappyHour}
           />
         ) : (
           <TabView

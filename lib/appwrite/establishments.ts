@@ -19,6 +19,10 @@ export interface EstablishmentDocument extends Models.DefaultDocument {
   openingDays?: string; // JSON string
   openingTime?: string;
   closingTime?: string;
+  happyHourEnabled?: boolean;
+  happyHourDays?: string; // JSON string
+  happyHourStartTime?: string;
+  happyHourEndTime?: string;
   repName?: string;
   repCpf?: string;
   repBirthDate?: string;
@@ -212,6 +216,37 @@ export async function updateSubscriptionStatus(
     {
       subscriptionStatus: status,
     },
+  );
+
+  return toPlainObject<EstablishmentDocument>(updated);
+}
+
+
+export interface HappyHourSettingsInput {
+  happyHourEnabled: boolean;
+  happyHourDays?: string[];
+  happyHourStartTime?: string | null;
+  happyHourEndTime?: string | null;
+}
+
+export async function updateHappyHourSettings(
+  establishmentId: string,
+  settings: HappyHourSettingsInput,
+): Promise<EstablishmentDocument> {
+  const { databases } = createAdminClient();
+
+  const payload: Record<string, unknown> = {
+    happyHourEnabled: Boolean(settings.happyHourEnabled),
+    happyHourDays: settings.happyHourDays ? JSON.stringify(settings.happyHourDays) : '[]',
+    happyHourStartTime: settings.happyHourStartTime || null,
+    happyHourEndTime: settings.happyHourEndTime || null,
+  };
+
+  const updated = await databases.updateDocument(
+    appwriteConfig.databaseId,
+    appwriteConfig.collections.establishments,
+    establishmentId,
+    payload,
   );
 
   return toPlainObject<EstablishmentDocument>(updated);

@@ -210,3 +210,43 @@ export async function uploadProductImageAction(
     return { success: false, message: msg };
   }
 }
+
+
+import { updateHappyHourSettings } from '@/lib/appwrite/establishments';
+import { happyHourSchema } from '@/lib/schemas/establishment';
+
+export async function saveHappyHourSettingsAction(
+  rawInput: unknown,
+): Promise<{ success: boolean; message?: string; errors?: Record<string, string[]> }> {
+  try {
+    const { user, establishment } = await getAuthorizedEstablishment();
+    if (!user || !establishment) {
+      return {
+        success: false,
+        message: 'Usuário não autenticado ou estabelecimento não encontrado.',
+      };
+    }
+
+    const parseResult = happyHourSchema.safeParse(rawInput);
+    if (!parseResult.success) {
+      const fieldErrors = parseResult.error.flatten().fieldErrors;
+      const firstErrorMessage = parseResult.error.issues[0]?.message;
+      return {
+        success: false,
+        message: firstErrorMessage || 'Dados de Happy Hour inválidos.',
+        errors: fieldErrors as Record<string, string[]>,
+      };
+    }
+
+    await updateHappyHourSettings(establishment.$id, parseResult.data);
+    revalidatePath('/menu');
+
+    return {
+      success: true,
+      message: 'Configurações de Happy Hour salvas com sucesso!',
+    };
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : 'Erro ao salvar configurações de Happy Hour.';
+    return { success: false, message: msg };
+  }
+}

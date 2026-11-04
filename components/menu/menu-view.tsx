@@ -6,11 +6,12 @@ import { MenuToolbar } from './menu-toolbar';
 import { ProductCard } from './product-card';
 import { ProductTable } from './product-table';
 import { ProductDialog } from './product-dialog';
+import { HappyHourDialog, type HappyHourConfig } from './happy-hour-dialog';
 import {
   toggleProductStatusAction,
   deleteProductAction,
 } from '@/actions/products';
-import { UtensilsCrossed, Plus, AlertCircle, Loader2 } from 'lucide-react';
+import { UtensilsCrossed, Plus, AlertCircle, Loader2, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -23,11 +24,20 @@ import {
 interface MenuViewProps {
   initialProducts: ProductDocument[];
   initialCategories: CategoryDocument[];
+  initialHappyHourConfig?: HappyHourConfig | null;
 }
 
-export function MenuView({ initialProducts, initialCategories }: MenuViewProps) {
+export function MenuView({
+  initialProducts,
+  initialCategories,
+  initialHappyHourConfig,
+}: MenuViewProps) {
   const [products, setProducts] = useState<ProductDocument[]>(initialProducts);
   const [categories, setCategories] = useState<CategoryDocument[]>(initialCategories);
+  const [happyHourConfig, setHappyHourConfig] = useState<HappyHourConfig | null>(
+    initialHappyHourConfig || null,
+  );
+  const [isHappyHourModalOpen, setIsHappyHourModalOpen] = useState(false);
 
   // Filters & View state
   const [searchQuery, setSearchQuery] = useState('');
@@ -154,13 +164,30 @@ export function MenuView({ initialProducts, initialCategories }: MenuViewProps) 
   return (
     <div className="space-y-6">
       {/* Header do Cardápio */}
-      <div className="flex flex-col gap-1">
-        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900">
-          Cardápio & Produtos
-        </h1>
-        <p className="text-xs text-zinc-500">
-          Gerencie o menu do seu restaurante, preços normais e de happy hour, adicionais e sugestões de upsell.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900">
+            Cardápio & Produtos
+          </h1>
+          <p className="text-xs text-zinc-500">
+            Gerencie o menu do seu restaurante, preços normais e de happy hour, adicionais e sugestões de upsell.
+          </p>
+        </div>
+
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setIsHappyHourModalOpen(true)}
+          className="h-10 text-xs font-semibold gap-2 border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-800 shrink-0 self-start sm:self-auto"
+        >
+          <Clock className="size-4 text-amber-500" />
+          <span>Horário de Happy Hour</span>
+          {happyHourConfig?.enabled ? (
+            <span className="size-2 rounded-full bg-emerald-500 shadow-2xs" />
+          ) : (
+            <span className="text-[10px] text-zinc-400 font-normal">(Inativo)</span>
+          )}
+        </Button>
       </div>
 
       {/* Toolbar com Filtros e Tab Switch */}
@@ -304,6 +331,14 @@ export function MenuView({ initialProducts, initialCategories }: MenuViewProps) 
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Modal de Configuração de Happy Hour */}
+      <HappyHourDialog
+        open={isHappyHourModalOpen}
+        onOpenChange={setIsHappyHourModalOpen}
+        initialConfig={happyHourConfig}
+        onSuccess={(newCfg) => setHappyHourConfig(newCfg)}
+      />
     </div>
   );
 }

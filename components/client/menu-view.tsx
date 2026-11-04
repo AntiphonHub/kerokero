@@ -7,6 +7,7 @@ import {
   Plus,
   UtensilsCrossed,
   CheckCircle2,
+  Clock,
 } from 'lucide-react';
 import type { ProductDocument, CategoryDocument } from '@/lib/appwrite/products';
 import { filterProducts, getEffectiveProductPrice } from '@/lib/utils/menu';
@@ -26,6 +27,7 @@ export interface MenuViewProps {
   onOrderSuccess?: () => void;
   onServiceCalled?: () => void;
   bottomBarOffset?: boolean;
+  isHappyHour?: boolean;
 }
 
 export function MenuView({
@@ -38,6 +40,7 @@ export function MenuView({
   onOrderSuccess,
   onServiceCalled,
   bottomBarOffset = false,
+  isHappyHour = false,
 }: MenuViewProps) {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -47,6 +50,14 @@ export function MenuView({
 
   // Filter products based on active category and search input
   const filteredProducts = filterProducts(products, selectedCategoryId, searchQuery);
+
+  const happyHourProductsCount = products.filter(
+    (p) =>
+      p.isActive !== false &&
+      p.happyHourPrice != null &&
+      p.happyHourPrice > 0 &&
+      p.happyHourPrice < p.price,
+  ).length;
 
   const handleOrderSuccess = () => {
     setOrderSentToast(true);
@@ -130,6 +141,22 @@ export function MenuView({
             Todos ({products.filter((p) => p.isActive !== false).length})
           </button>
 
+          {/* Happy Hour pill (exibida apenas durante horário ativo e se houver itens) */}
+          {isHappyHour && happyHourProductsCount > 0 && (
+            <button
+              type="button"
+              onClick={() => setSelectedCategoryId('happy_hour')}
+              className={`min-h-[38px] px-4 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors shrink-0 flex items-center gap-1.5 ${
+                selectedCategoryId === 'happy_hour'
+                  ? 'bg-amber-500 text-zinc-950 font-bold shadow-xs'
+                  : 'bg-amber-500/10 text-amber-800 hover:bg-amber-500/20'
+              }`}
+            >
+              <Clock className="size-3.5" />
+              <span>Happy Hour ({happyHourProductsCount})</span>
+            </button>
+          )}
+
           {/* Dynamic Categories */}
           {categories.map((cat) => {
             const count = products.filter(
@@ -181,9 +208,12 @@ export function MenuView({
           </div>
         ) : (
           filteredProducts.map((product) => {
-            const effectivePrice = getEffectiveProductPrice(product);
-            const isHappyHour =
-              product.happyHourPrice != null && product.happyHourPrice < product.price;
+            const effectivePrice = getEffectiveProductPrice(product, isHappyHour);
+            const isProductInHappyHour =
+              isHappyHour &&
+              product.happyHourPrice != null &&
+              product.happyHourPrice > 0 &&
+              product.happyHourPrice < product.price;
 
             return (
               <div
@@ -217,7 +247,7 @@ export function MenuView({
                       <span className="text-sm font-bold text-zinc-900">
                         {formatCentsToBrl(effectivePrice)}
                       </span>
-                      {isHappyHour && (
+                      {isProductInHappyHour && (
                         <span className="text-[11px] text-zinc-400 line-through">
                           {formatCentsToBrl(product.price)}
                         </span>
@@ -264,6 +294,9 @@ export function MenuView({
         product={selectedProduct}
         isOpen={!!selectedProduct}
         onClose={() => setSelectedProduct(null)}
+        allProducts={products}
+        onSelectProduct={(p) => setSelectedProduct(p)}
+        isHappyHour={isHappyHour}
       />
 
       {/* Cart Sheet */}
@@ -272,6 +305,9 @@ export function MenuView({
         onClose={() => setIsCartOpen(false)}
         tableToken={tableToken}
         onOrderSuccess={handleOrderSuccess}
+        products={products}
+        onSelectProduct={(p) => setSelectedProduct(p)}
+        isHappyHour={isHappyHour}
       />
     </div>
   );

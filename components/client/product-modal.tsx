@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog';
-import { X, Plus, Minus, Check } from 'lucide-react';
+import { X, Plus, Minus, Check, UtensilsCrossed } from 'lucide-react';
 import type { ProductDocument } from '@/lib/appwrite/products';
 import type { ProductAddon } from '@/lib/schemas/product';
 import { cartStore } from '@/lib/store/cart-store';
@@ -10,6 +10,7 @@ import {
   getEffectiveProductPrice,
   calculateCustomizedUnitPrice,
   calculateItemTotal,
+  resolveProductUpsells,
 } from '@/lib/utils/menu';
 import { formatCentsToBrl } from '@/lib/formatters';
 
@@ -17,23 +18,37 @@ export interface ProductModalProps {
   product: ProductDocument | null;
   isOpen: boolean;
   onClose: () => void;
+  allProducts?: ProductDocument[];
+  onSelectProduct?: (product: ProductDocument) => void;
+  isHappyHour?: boolean;
 }
 
 interface ProductModalInnerProps {
   product: ProductDocument;
   onClose: () => void;
+  allProducts?: ProductDocument[];
+  onSelectProduct?: (product: ProductDocument) => void;
+  isHappyHour?: boolean;
 }
 
-function ProductModalInner({ product, onClose }: ProductModalInnerProps) {
+function ProductModalInner({
+  product,
+  onClose,
+  allProducts = [],
+  onSelectProduct,
+  isHappyHour = false,
+}: ProductModalInnerProps) {
   const [quantity, setQuantity] = useState(1);
   const [selectedAddonIds, setSelectedAddonIds] = useState<string[]>([]);
   const [notes, setNotes] = useState('');
+  const [addedUpsellId, setAddedUpsellId] = useState<string | null>(null);
 
-  const basePrice = getEffectiveProductPrice(product);
+  const basePrice = getEffectiveProductPrice(product, isHappyHour);
   const availableAddons = product.addons || [];
   const selectedAddons = availableAddons.filter((a) => selectedAddonIds.includes(a.id));
   const unitPrice = calculateCustomizedUnitPrice(basePrice, selectedAddons);
   const totalPrice = calculateItemTotal(unitPrice, quantity);
+  const upsellProducts = resolveProductUpsells(product, allProducts);
 
   const toggleAddon = (addon: ProductAddon) => {
     setSelectedAddonIds((prev) =>
@@ -62,6 +77,25 @@ function ProductModalInner({ product, onClose }: ProductModalInnerProps) {
     });
 
     onClose();
+  };
+
+  const handleAddUpsell = (item: ProductDocument) => {
+    if (item.addons && item.addons.length > 0) {
+      if (onSelectProduct) {
+        onSelectProduct(item);
+      }
+    } else {
+      cartStore.addItem({
+        productId: item.$id,
+        name: item.name,
+        priceCents: getEffectiveProductPrice(item, isHappyHour),
+        quantity: 1,
+      });
+      setAddedUpsellId(item.$id);
+      setTimeout(() => {
+        setAddedUpsellId((prev) => (prev === item.$id ? null : prev));
+      }, 1500);
+    }
   };
 
   return (
@@ -107,7 +141,7 @@ function ProductModalInner({ product, onClose }: ProductModalInnerProps) {
             <span className="text-base font-bold text-zinc-900">
               {formatCentsToBrl(basePrice)}
             </span>
-            {product.happyHourPrice != null && product.happyHourPrice < product.price && (
+            {isHappyHour && product.happyHourPrice != null && product.happyHourPrice < product.price && (
               <span className="text-xs text-zinc-400 line-through">
                 {formatCentsToBrl(product.price)}
               </span>
@@ -174,6 +208,79 @@ function ProductModalInner({ product, onClose }: ProductModalInnerProps) {
             className="w-full text-xs rounded-xl border border-zinc-200 p-3 text-zinc-900 placeholder:text-zinc-400 focus:outline-hidden focus:ring-1 focus:ring-amber-500 focus:border-amber-500 resize-none"
           />
         </div>
+
+        {/* Upsell / Combina com este item Section */}
+        {upsellProducts.length > 0 && (
+          <div className="space-y-2.5 pt-3 border-t border-zinc-100">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
+                Combina com este item
+              </span>
+              {product.upsellMessage && (
+                <p className="text-xs font-medium text-zinc-800 italic">
+                  &ldquo;{product.upsellMessage}&rdquo;
+                </p>
+              )}
+            </div>
+
+            <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-none snap-x -mx-1 px-1">
+              {upsellProducts.map((upsellItem) => {
+                const itemPrice = getEffectiveProductPrice(upsellItem, isHappyHour);
+                const hasAddons = upsellItem.addons && upsellItem.addons.length > 0;
+                const isAdded = addedUpsellId === upsellItem.$id;
+
+                return (
+                  <div
+                    key={upsellItem.$id}
+                    className="shrink-0 w-36 p-2.5 rounded-xl border border-zinc-200/90 bg-zinc-50/60 flex flex-col justify-between snap-start"
+                  >
+                    <div>
+                      {upsellItem.imageUrl ? (
+                        <div className="w-full h-20 rounded-lg overflow-hidden bg-zinc-100 mb-2 border border-zinc-200/60">
+                          <img
+                            src={upsellItem.imageUrl}
+                            alt={upsellItem.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-full h-14 rounded-lg bg-zinc-100 border border-zinc-200/60 mb-2 flex items-center justify-center text-zinc-400">
+                          <UtensilsCrossed className="size-5" />
+                        </div>
+                      )}
+                      <h4 className="text-xs font-semibold text-zinc-900 line-clamp-1 leading-tight">
+                        {upsellItem.name}
+                      </h4>
+                    </div>
+
+                    <div className="mt-2 flex items-center justify-between gap-1">
+                      <span className="text-xs font-bold text-zinc-900">
+                        {formatCentsToBrl(itemPrice)}
+                      </span>
+
+                      <button
+                        type="button"
+                        onClick={() => handleAddUpsell(upsellItem)}
+                        className={`size-7 rounded-lg flex items-center justify-center active:scale-95 transition-all shadow-2xs ${
+                          isAdded
+                            ? 'bg-emerald-600 text-white'
+                            : 'bg-zinc-900 text-white hover:bg-zinc-800'
+                        }`}
+                        title={hasAddons ? 'Personalizar e adicionar' : 'Adicionar ao pedido'}
+                      >
+                        {isAdded ? (
+                          <Check className="size-4 stroke-[3]" />
+                        ) : (
+                          <Plus className="size-4" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Bottom Actions Bar */}
@@ -216,7 +323,14 @@ function ProductModalInner({ product, onClose }: ProductModalInnerProps) {
   );
 }
 
-export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
+export function ProductModal({
+  product,
+  isOpen,
+  onClose,
+  allProducts,
+  onSelectProduct,
+  isHappyHour,
+}: ProductModalProps) {
   if (!product) return null;
 
   return (
@@ -224,7 +338,14 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
       <DialogPrimitive.Portal>
         <DialogPrimitive.Backdrop className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs transition-opacity duration-200" />
         <div className="fixed inset-x-0 bottom-0 z-50 flex justify-center pointer-events-none">
-          <ProductModalInner key={product.$id} product={product} onClose={onClose} />
+          <ProductModalInner
+            key={product.$id}
+            product={product}
+            onClose={onClose}
+            allProducts={allProducts}
+            onSelectProduct={onSelectProduct}
+            isHappyHour={isHappyHour}
+          />
         </div>
       </DialogPrimitive.Portal>
     </DialogPrimitive.Root>

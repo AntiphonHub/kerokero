@@ -41,6 +41,7 @@ import {
 } from '@/lib/asaas/pix';
 import { isValidCpf } from '@/lib/validators/cpf';
 import type { EstablishmentDocument } from '@/lib/appwrite/establishments';
+import { isEstablishmentOpen } from '@/lib/utils/operating-hours';
 
 export interface ActionResult<T = unknown> {
   success: boolean;
@@ -315,6 +316,14 @@ export async function submitOrderAction(
 
     const table = await getTableById(session.tableId);
     const tableNumber = table ? table.number : 1;
+
+    const establishment = await getEstablishmentById(session.establishmentId);
+    if (establishment && !isEstablishmentOpen(establishment)) {
+      return {
+        success: false,
+        message: 'O restaurante está fechado para novos pedidos no momento.',
+      };
+    }
 
     const createdOrders: OrderDocument[] = [];
     for (const item of parsed.data) {

@@ -13,7 +13,12 @@ import { getClientSessionAction } from '@/actions/client';
 import { PwaShell } from '@/components/client/pwa-shell';
 import { GateFlow } from '@/components/client/gate-flow';
 import { ClientApp } from '@/components/client/client-app';
-import { AlertCircle, QrCode } from 'lucide-react';
+import { AlertCircle, QrCode, Clock } from 'lucide-react';
+import {
+  isEstablishmentOpen,
+  isHappyHourActive,
+  formatOperatingHours,
+} from '@/lib/utils/operating-hours';
 
 interface PageProps {
   params: Promise<{ token: string }>;
@@ -77,7 +82,33 @@ export default async function ClientTablePage(props: PageProps) {
       ? sessionResult.data
       : null;
 
-  // 5. Se já tem sessão ativa na mesa, exibe a comanda e o Cardápio Digital integrados
+  // 5. Trava de Horário de Atendimento: se o restaurante estiver fechado e não houver sessão ativa
+  const isOpen = isEstablishmentOpen(establishment);
+  if (!isOpen && !activeSession) {
+    const hoursFormatted = formatOperatingHours(establishment);
+    return (
+      <PwaShell tableLabel="Restaurante Fechado" establishmentName={establishmentName}>
+        <div className="flex flex-col flex-1 items-center justify-center p-6 text-center">
+          <div className="size-16 rounded-2xl bg-zinc-100 border border-zinc-200/80 flex items-center justify-center text-zinc-500 mb-6 shadow-xs">
+            <Clock className="size-8" />
+          </div>
+          <h1 className="text-xl font-bold text-zinc-900 mb-2 tracking-tight">
+            Restaurante Fechado
+          </h1>
+          <p className="text-sm text-zinc-600 leading-relaxed max-w-sm mb-4">
+            No momento o estabelecimento não está em horário de atendimento presencial.
+          </p>
+          <div className="px-4 py-2.5 rounded-xl bg-zinc-50 border border-zinc-200/80 text-xs font-medium text-zinc-700">
+            {hoursFormatted}
+          </div>
+        </div>
+      </PwaShell>
+    );
+  }
+
+  const isHappyHour = isHappyHourActive(establishment);
+
+  // 6. Se já tem sessão ativa na mesa, exibe a comanda e o Cardápio Digital integrados
   if (activeSession) {
     const [products, categories, sessionDoc, sessionOrders] = await Promise.all([
       getProductsByEstablishment(table.establishmentId),
@@ -103,6 +134,7 @@ export default async function ClientTablePage(props: PageProps) {
           currentParticipantId={activeSession.participantId}
           currentParticipantName={activeSession.participantName}
           tableNumber={table.number}
+          isHappyHour={isHappyHour}
         />
       </PwaShell>
     );

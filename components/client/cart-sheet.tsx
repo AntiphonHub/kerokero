@@ -12,17 +12,27 @@ import {
   CheckCircle2,
   AlertCircle,
   ArrowRight,
+  Check,
+  UtensilsCrossed,
 } from 'lucide-react';
 import { useCartStore } from '@/lib/store/cart-store';
 import { submitOrderAction } from '@/actions/client';
-import { mapCartItemsToOrderInput } from '@/lib/utils/menu';
+import {
+  mapCartItemsToOrderInput,
+  resolveCartUpsells,
+  getEffectiveProductPrice,
+} from '@/lib/utils/menu';
 import { formatCentsToBrl } from '@/lib/formatters';
+import type { ProductDocument } from '@/lib/appwrite/products';
 
 export interface CartSheetProps {
   isOpen: boolean;
   onClose: () => void;
   tableToken?: string;
   onOrderSuccess?: () => void;
+  products?: ProductDocument[];
+  onSelectProduct?: (product: ProductDocument) => void;
+  isHappyHour?: boolean;
 }
 
 export function CartSheet({
@@ -30,13 +40,40 @@ export function CartSheet({
   onClose,
   tableToken,
   onOrderSuccess,
+  products = [],
+  onSelectProduct,
+  isHappyHour = false,
 }: CartSheetProps) {
-  const { items, removeItem, updateQuantity, clearCart, totalCents, itemCount } =
+  const { items, addItem, removeItem, updateQuantity, clearCart, totalCents, itemCount } =
     useCartStore(tableToken);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [addedUpsellId, setAddedUpsellId] = useState<string | null>(null);
+
+  const cartProductIds = items.map((i) => i.productId);
+  const cartUpsells = resolveCartUpsells(cartProductIds, products);
+
+  const handleAddUpsell = (item: ProductDocument) => {
+    if (item.addons && item.addons.length > 0) {
+      onClose();
+      if (onSelectProduct) {
+        onSelectProduct(item);
+      }
+    } else {
+      addItem({
+        productId: item.$id,
+        name: item.name,
+        priceCents: getEffectiveProductPrice(item, isHappyHour),
+        quantity: 1,
+      });
+      setAddedUpsellId(item.$id);
+      setTimeout(() => {
+        setAddedUpsellId((prev) => (prev === item.$id ? null : prev));
+      }, 1500);
+    }
+  };
 
   const handleSubmitOrder = async () => {
     if (items.length === 0 || isSubmitting) return;
@@ -226,6 +263,72 @@ export function CartSheet({
                     </div>
                   </div>
                 ))}
+
+                {/* Upsell Suggestions in Cart */}
+                {cartUpsells.length > 0 && (
+                  <div className="pt-3 pb-1 border-t border-zinc-100 space-y-2">
+                    <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider block">
+                      Sugestões para o seu pedido
+                    </span>
+
+                    <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-none snap-x -mx-1 px-1">
+                      {cartUpsells.map((upsellItem) => {
+                        const itemPrice = getEffectiveProductPrice(upsellItem, isHappyHour);
+                        const hasAddons = upsellItem.addons && upsellItem.addons.length > 0;
+                        const isAdded = addedUpsellId === upsellItem.$id;
+
+                        return (
+                          <div
+                            key={upsellItem.$id}
+                            className="shrink-0 w-32 p-2 rounded-xl border border-zinc-200/90 bg-zinc-50/70 flex flex-col justify-between snap-start"
+                          >
+                            <div>
+                              {upsellItem.imageUrl ? (
+                                <div className="w-full h-16 rounded-lg overflow-hidden bg-zinc-100 mb-1.5 border border-zinc-200/60">
+                                  <img
+                                    src={upsellItem.imageUrl}
+                                    alt={upsellItem.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                              ) : (
+                                <div className="w-full h-12 rounded-lg bg-zinc-100 border border-zinc-200/60 mb-1.5 flex items-center justify-center text-zinc-400">
+                                  <UtensilsCrossed className="size-4" />
+                                </div>
+                              )}
+                              <h4 className="text-xs font-semibold text-zinc-900 line-clamp-1 leading-tight">
+                                {upsellItem.name}
+                              </h4>
+                            </div>
+
+                            <div className="mt-2 flex items-center justify-between gap-1">
+                              <span className="text-xs font-bold text-zinc-900">
+                                {formatCentsToBrl(itemPrice)}
+                              </span>
+
+                              <button
+                                type="button"
+                                onClick={() => handleAddUpsell(upsellItem)}
+                                className={`size-7 rounded-lg flex items-center justify-center active:scale-95 transition-all shadow-2xs ${
+                                  isAdded
+                                    ? 'bg-emerald-600 text-white'
+                                    : 'bg-zinc-900 text-white hover:bg-zinc-800'
+                                }`}
+                                title={hasAddons ? 'Personalizar e adicionar' : 'Adicionar ao pedido'}
+                              >
+                                {isAdded ? (
+                                  <Check className="size-4 stroke-[3]" />
+                                ) : (
+                                  <Plus className="size-4" />
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

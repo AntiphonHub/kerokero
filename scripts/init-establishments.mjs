@@ -90,6 +90,9 @@ async function initEstablishments() {
       { key: 'asaasWalletId', size: 255, required: false },
       { key: 'asaasSubaccountApiKey', size: 255, required: false },
       { key: 'subaccountStatus', size: 32, required: false, default: 'under_analysis' },
+      { key: 'happyHourDays', size: 255, required: false },
+      { key: 'happyHourStartTime', size: 16, required: false },
+      { key: 'happyHourEndTime', size: 16, required: false },
     ];
 
     for (const attr of stringAttrs) {
@@ -110,6 +113,7 @@ async function initEstablishments() {
 
     console.log('Creating boolean attributes...');
     await databases.createBooleanAttribute(databaseId, collectionId, 'onboardingCompleted', false, false);
+    await databases.createBooleanAttribute(databaseId, collectionId, 'happyHourEnabled', false, false);
 
     console.log('All attributes created successfully.');
   }

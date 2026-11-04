@@ -8,6 +8,8 @@ import {
   calculateCustomizedUnitPrice,
   calculateItemTotal,
   mapCartItemsToOrderInput,
+  resolveProductUpsells,
+  resolveCartUpsells,
 } from '@/lib/utils/menu';
 import { cartStore } from '@/lib/store/cart-store';
 import { submitOrderAction, type CartItemInput } from '@/actions/client';
@@ -156,6 +158,12 @@ describe('Client Menu Utilities & Ordering Flow', () => {
       expect(noMatch).toHaveLength(0);
     });
 
+    it('filters products by categoryId "happy_hour" returning only active products with valid happy hour price', () => {
+      const happyHourItems = filterProducts(mockProducts, 'happy_hour');
+      expect(happyHourItems).toHaveLength(1);
+      expect(happyHourItems[0].$id).toBe('prod_1');
+    });
+
     it('handles empty input gracefully', () => {
       expect(filterProducts([])).toEqual([]);
       expect(filterProducts(null as any)).toEqual([]);
@@ -164,16 +172,19 @@ describe('Client Menu Utilities & Ordering Flow', () => {
 
   describe('getEffectiveProductPrice', () => {
     it('returns regular price when happyHourPrice is null or not provided', () => {
-      expect(getEffectiveProductPrice({ price: 3500, happyHourPrice: null })).toBe(3500);
-      expect(getEffectiveProductPrice({ price: 2000 })).toBe(2000);
+      expect(getEffectiveProductPrice({ price: 3500, happyHourPrice: null }, true)).toBe(3500);
+      expect(getEffectiveProductPrice({ price: 2000 }, true)).toBe(2000);
     });
 
-    it('returns happyHourPrice when defined and greater than zero', () => {
-      expect(getEffectiveProductPrice({ price: 3500, happyHourPrice: 2800 })).toBe(2800);
+    it('returns happyHourPrice only when isHappyHour is true', () => {
+      expect(getEffectiveProductPrice({ price: 3500, happyHourPrice: 2800 }, true)).toBe(2800);
+      // Fora do Happy Hour, deve retornar o preço regular
+      expect(getEffectiveProductPrice({ price: 3500, happyHourPrice: 2800 }, false)).toBe(3500);
+      expect(getEffectiveProductPrice({ price: 3500, happyHourPrice: 2800 })).toBe(3500);
     });
 
     it('falls back to regular price if happyHourPrice is zero or negative', () => {
-      expect(getEffectiveProductPrice({ price: 3500, happyHourPrice: 0 })).toBe(3500);
+      expect(getEffectiveProductPrice({ price: 3500, happyHourPrice: 0 }, true)).toBe(3500);
     });
   });
 
@@ -260,7 +271,7 @@ describe('Client Menu Utilities & Ordering Flow', () => {
   describe('Cart Integration & Order Submission Flow', () => {
     it('adds customized items to cartStore and calculates cart total correctly', () => {
       const product = mockProducts[0];
-      const basePrice = getEffectiveProductPrice(product); // 2800 (happy hour)
+      const basePrice = getEffectiveProductPrice(product, true); // 2800 (happy hour)
       const selectedAddons = [product.addons[0]]; // Bacon Crocante (+600)
       const unitPrice = calculateCustomizedUnitPrice(basePrice, selectedAddons); // 3400
       const quantity = 2;
@@ -357,6 +368,99 @@ describe('Client Menu Utilities & Ordering Flow', () => {
 
       // Cart should not be cleared on failure
       expect(cartStore.getState().items).toHaveLength(1);
+    });
+  });
+
+  describe('resolveProductUpsells', () => {
+    const productsList = [
+      {
+        $id: 'p_burger',
+        name: 'Burger',
+        isActive: true,
+        price: 3000,
+        upsellProductIds: ['p_fries', 'p_coke', 'p_inactive', 'p_burger'],
+        upsellMessage: 'Vai uma batata frita e uma coca?',
+      } as any,
+      {
+        $id: 'p_fries',
+        name: 'Fritas',
+        isActive: true,
+        price: 1500,
+        upsellProductIds: [],
+      } as any,
+      {
+        $id: 'p_coke',
+        name: 'Coca-Cola',
+        isActive: true,
+        price: 800,
+        upsellProductIds: [],
+      } as any,
+      {
+        $id: 'p_inactive',
+        name: 'Sobremesa Esgotada',
+        isActive: false,
+        price: 1200,
+        upsellProductIds: [],
+      } as any,
+    ];
+
+    it('retorna os produtos sugeridos respeitando ordem e descartando inativos, auto-upsell e inexistentes', () => {
+      const upsells = resolveProductUpsells(productsList[0], productsList);
+      expect(upsells).toHaveLength(2);
+      expect(upsells.map((u) => u.$id)).toEqual(['p_fries', 'p_coke']);
+    });
+
+    it('retorna array vazio quando produto não possui upsellProductIds', () => {
+      const upsells = resolveProductUpsells(productsList[1], productsList);
+      expect(upsells).toEqual([]);
+    });
+  });
+
+  describe('resolveCartUpsells', () => {
+    const productsList = [
+      {
+        $id: 'p_burger',
+        name: 'Burger',
+        isActive: true,
+        price: 3000,
+        upsellProductIds: ['p_fries', 'p_coke'],
+      } as any,
+      {
+        $id: 'p_fries',
+        name: 'Fritas',
+        isActive: true,
+        price: 1500,
+        upsellProductIds: ['p_coke', 'p_pudim'],
+      } as any,
+      {
+        $id: 'p_coke',
+        name: 'Coca-Cola',
+        isActive: true,
+        price: 800,
+        upsellProductIds: [],
+      } as any,
+      {
+        $id: 'p_pudim',
+        name: 'Pudim',
+        isActive: true,
+        price: 1200,
+        upsellProductIds: [],
+      } as any,
+    ];
+
+    it('retorna sugestões deduplicadas omitindo produtos que já estão no carrinho', () => {
+      // Burger e Fritas já estão no carrinho
+      const cartProductIds = ['p_burger', 'p_fries'];
+      const suggestions = resolveCartUpsells(cartProductIds, productsList);
+
+      // Deve sugerir Coca-Cola e Pudim, mas NÃO Burger ou Fritas
+      expect(suggestions.map((s) => s.$id)).toEqual(['p_coke', 'p_pudim']);
+    });
+
+    it('retorna array vazio se todos os upsells sugeridos já estiverem no carrinho', () => {
+      const cartProductIds = ['p_burger', 'p_fries', 'p_coke', 'p_pudim'];
+      const suggestions = resolveCartUpsells(cartProductIds, productsList);
+      expect(suggestions).toEqual([]);
     });
   });
 });

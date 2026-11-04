@@ -23,9 +23,6 @@ export function PwaShell({
       {/* Top Mobile Bar */}
       <header className="sticky top-0 z-30 flex h-14 w-full items-center justify-between border-b border-zinc-200/80 bg-white/95 px-4 backdrop-blur-md">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-zinc-900 text-xs font-bold tracking-tight text-white shadow-xs">
-            KK
-          </div>
           <div className="min-w-0 flex flex-col justify-center">
             {establishmentName && (
               <span className="truncate text-[11px] font-medium tracking-wide uppercase text-zinc-500">
