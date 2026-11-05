@@ -14,6 +14,7 @@ import { FileTextIcon } from '@/components/ui/file-text';
 import { CookingPotIcon } from '@/components/ui/cooking-pot';
 import { BookTextIcon } from '@/components/ui/book-text';
 import { CircleDollarSignIcon } from '@/components/ui/circle-dollar-sign';
+import { WalletIcon } from '@/components/ui/wallet';
 import { ReceiptIcon } from '@/components/ui/receipt';
 import { ChartLineIcon } from '@/components/ui/chart-line';
 import { SettingsIcon } from '@/components/ui/settings';
@@ -95,6 +96,11 @@ export function MerchantSidebar({
 
   // Configuração dos itens do grupo "Financeiro"
   const financialItems: SidebarGroupItemConfig[] = [
+    {
+      href: '/wallet',
+      label: 'Carteira & Saque',
+      icon: WalletIcon,
+    },
     {
       href: '/orders',
       label: 'Histórico de Pedidos',

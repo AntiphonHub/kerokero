@@ -40,6 +40,7 @@ import {
   checkSubaccountPaymentStatus,
 } from '@/lib/asaas/pix';
 import { isValidCpf } from '@/lib/validators/cpf';
+import { decryptSecret } from '@/lib/security/encryption';
 import type { EstablishmentDocument } from '@/lib/appwrite/establishments';
 import { isEstablishmentOpen } from '@/lib/utils/operating-hours';
 
@@ -517,7 +518,7 @@ export async function requestPixCheckoutAction(
     const valueInReais = Number((amountToPayCents / 100).toFixed(2));
 
     const pixResult = await createPixPaymentOnSubaccount(
-      establishment.asaasSubaccountApiKey,
+      decryptSecret(establishment.asaasSubaccountApiKey),
       {
         customerName: session.participantName,
         customerCpf: payerCpf,
@@ -578,7 +579,7 @@ export async function pollPixStatusAction(
     }
 
     const paymentStatus = await checkSubaccountPaymentStatus(
-      establishment.asaasSubaccountApiKey,
+      decryptSecret(establishment.asaasSubaccountApiKey),
       paymentId,
     );
 
@@ -617,7 +618,8 @@ export async function pollPixStatusAction(
     // Revoga o cookie de sessão do participante quitado
     if (isParticipantSettled) {
       const cookieStore = await cookies();
-      cookieStore.delete(PARTICIPANT_COOKIE_NAME);
+      // Mantém a sessão ativa para visualização do comprovante; a revogação ocorre quando o cliente clica em "Finalizar"
+      // cookieStore.delete(PARTICIPANT_COOKIE_NAME);
     }
 
     return {

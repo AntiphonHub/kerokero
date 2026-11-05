@@ -25,6 +25,7 @@ import {
 import { createAsaasSubaccount } from '@/lib/asaas/subaccounts';
 import { generateKycKey, uploadKycDocument } from '@/lib/r2/storage';
 import { ensureEstablishmentTables } from '@/lib/appwrite/tables';
+import { encryptSecret, isEncryptedSecret } from '@/lib/security/encryption';
 
 export interface ActionResponse {
   success?: boolean;
@@ -244,7 +245,10 @@ export async function submitSubaccountAction(
       });
       subaccountId = subaccount.id;
       walletId = subaccount.walletId;
-      subaccountApiKey = subaccount.apiKey;
+      subaccountApiKey = subaccount.apiKey ? encryptSecret(subaccount.apiKey) : '';
+    } else if (subaccountApiKey && !isEncryptedSecret(subaccountApiKey)) {
+      // Migra chave legada em texto claro para cifrado
+      subaccountApiKey = encryptSecret(subaccountApiKey);
     }
 
     // 4. Salva no Appwrite ativando o onboarding

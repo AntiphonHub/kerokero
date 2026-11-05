@@ -58,6 +58,7 @@ export function ClientApp({
 
   // Revalidação dos dados da comanda (via WebSocket, visibilidade ou manual)
   const handleRefresh = useCallback(async () => {
+    if (receiptData) return;
     setIsRefreshing(true);
     try {
       const res = await getTableTabDataAction();
@@ -72,7 +73,7 @@ export function ClientApp({
     } finally {
       setIsRefreshing(false);
     }
-  }, []);
+  }, [receiptData]);
 
   // Quando um pedido é finalizado com sucesso no carrinho
   const handleOrderSuccess = useCallback(() => {

@@ -5,6 +5,8 @@ import {
   listParticipantOrders,
   updateOrderStatus,
   getOrderById,
+  listKitchenOrders,
+  batchUpdateOrdersStatus,
   type CreateOrderInput,
 } from '@/lib/appwrite/orders';
 import { appwriteConfig } from '@/lib/appwrite/config';
@@ -230,6 +232,50 @@ describe('Orders Appwrite Service', () => {
       mockGetDocument.mockRejectedValueOnce(new Error('Not found'));
       const notFound = await getOrderById('non_existent');
       expect(notFound).toBeNull();
+    });
+  });
+
+  describe('listKitchenOrders', () => {
+    it('fetches non-delivered kitchen orders sorted by creation date', async () => {
+      const mockOrders = [
+        { $id: 'ord_1', establishmentId, status: 'pending', $createdAt: '2026-11-04T10:00:00Z' },
+        { $id: 'ord_2', establishmentId, status: 'preparing', $createdAt: '2026-11-04T10:05:00Z' },
+      ];
+
+      mockListDocuments.mockResolvedValueOnce({
+        total: 2,
+        documents: mockOrders,
+      });
+
+      const orders = await listKitchenOrders(establishmentId);
+      expect(orders).toHaveLength(2);
+      expect(mockListDocuments).toHaveBeenCalledWith(
+        appwriteConfig.databaseId,
+        appwriteConfig.collections.orders,
+        expect.any(Array),
+      );
+    });
+  });
+
+  describe('batchUpdateOrdersStatus', () => {
+    it('updates only orders belonging to the specified establishment', async () => {
+      mockGetDocument.mockImplementation(async (db, coll, id) => {
+        if (id === 'ord_1') return { $id: 'ord_1', establishmentId };
+        if (id === 'ord_2') return { $id: 'ord_2', establishmentId: 'other_est' };
+        throw new Error('Not found');
+      });
+
+      mockUpdateDocument.mockResolvedValue({});
+
+      const updatedCount = await batchUpdateOrdersStatus(establishmentId, ['ord_1', 'ord_2'], 'ready');
+      expect(updatedCount).toBe(1);
+      expect(mockUpdateDocument).toHaveBeenCalledTimes(1);
+      expect(mockUpdateDocument).toHaveBeenCalledWith(
+        appwriteConfig.databaseId,
+        appwriteConfig.collections.orders,
+        'ord_1',
+        { status: 'ready' },
+      );
     });
   });
 });

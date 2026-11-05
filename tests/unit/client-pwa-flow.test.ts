@@ -9,6 +9,7 @@ import {
   getTableTabDataAction,
   requestPixCheckoutAction,
   pollPixStatusAction,
+  clearClientSessionAction,
 } from '@/actions/client';
 import { PARTICIPANT_COOKIE_NAME } from '@/lib/security/client-session';
 import { generateTableToken } from '@/lib/security/table-token';
@@ -453,6 +454,8 @@ describe('Client PWA Orders & PIX End-to-End Integration Flow', () => {
     expect(carlosPollRes.data?.sessionClosed).toBe(false); // Mesa ainda possui débito da Ana
 
     // Cookie de Carlos foi revogado após quitar sua conta
+    // Carlos visualiza o comprovante e depois clica em "Finalizar"
+    await clearClientSessionAction();
     expect(clientCookies.carlos.get(PARTICIPANT_COOKIE_NAME)).toBeUndefined();
 
     // Cookie de Ana permanece intacto
@@ -514,6 +517,7 @@ describe('Client PWA Orders & PIX End-to-End Integration Flow', () => {
     expect(anaPollRes.data?.sessionClosed).toBe(true); // 100% liquidado!
 
     // Cookie de Ana também é revogado
+    await clearClientSessionAction();
     expect(clientCookies.ana.get(PARTICIPANT_COOKIE_NAME)).toBeUndefined();
 
     // Validação no banco: sessão encerrada ('closed') com 100% pago

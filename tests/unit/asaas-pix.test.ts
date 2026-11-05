@@ -204,6 +204,69 @@ describe('Asaas Subaccount PIX Service', () => {
         }),
       ).rejects.toThrow('Valor mínimo não atingido');
     });
+
+    it('auto-provisions random EVP Pix key and retries if subaccount lacks a Pix key', async () => {
+      const mockCustomer = { id: 'cus_sub_999' };
+      const mockPayment = { id: 'pay_sub_888', value: 45.5 };
+      const mockQrCode = {
+        encodedImage: 'base64_qr_image_data',
+        payload: '00020126580014br.gov.bcb.pix...',
+        expirationDate: '2026-11-03 14:15:00',
+      };
+
+      const fetchMock = vi.fn();
+      // 1. POST /customers
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => mockCustomer,
+      } as Response);
+      // 2. POST /payments
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => mockPayment,
+      } as Response);
+      // 3. GET /payments/pay_sub_888/pixQrCode fails: lacks Pix key
+      fetchMock.mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        json: async () => ({ errors: [{ description: 'Você não possui uma chave Pix cadastrada' }] }),
+      } as Response);
+      // 4. POST /pix/addressKeys (auto-provision EVP)
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ key: 'evp-key-123', type: 'EVP' }),
+      } as Response);
+      // 5. Retry GET /payments/pay_sub_888/pixQrCode succeeds!
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => mockQrCode,
+      } as Response);
+
+      global.fetch = fetchMock;
+
+      const result = await createPixPaymentOnSubaccount(mockSubaccountApiKey, {
+        customerName: 'Carlos Silva',
+        customerCpf: '123.456.789-00',
+        value: 45.5,
+        description: 'Mesa 4 - Carlos Silva',
+      });
+
+      expect(result.paymentId).toBe('pay_sub_888');
+      expect(result.pixCopyPaste).toBe('00020126580014br.gov.bcb.pix...');
+      expect(fetchMock).toHaveBeenCalledTimes(5);
+      expect(fetchMock).toHaveBeenNthCalledWith(
+        4,
+        'https://sandbox.asaas.com/api/v3/pix/addressKeys',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ type: 'EVP' }),
+        }),
+      );
+    });
   });
 
   describe('checkSubaccountPaymentStatus', () => {

@@ -88,7 +88,7 @@ async function initEstablishments() {
       { key: 'subscriptionStatus', size: 32, required: false, default: 'pending' },
       { key: 'asaasSubaccountId', size: 255, required: false },
       { key: 'asaasWalletId', size: 255, required: false },
-      { key: 'asaasSubaccountApiKey', size: 255, required: false },
+      { key: 'asaasSubaccountApiKey', size: 1024, required: false },
       { key: 'subaccountStatus', size: 32, required: false, default: 'under_analysis' },
       { key: 'happyHourDays', size: 255, required: false },
       { key: 'happyHourStartTime', size: 16, required: false },

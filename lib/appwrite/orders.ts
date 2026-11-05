@@ -208,3 +208,60 @@ export async function getOrderById(orderId: string): Promise<OrderDocument | nul
     return null;
   }
 }
+
+
+/**
+ * Lista pedidos ativos na fila de produção da cozinha (status: pending, preparing, ready)
+ * ordenados por data de criação crescente (FIFO).
+ */
+export async function listKitchenOrders(establishmentId: string): Promise<OrderDocument[]> {
+  const { databases } = createAdminClient();
+
+  const res = await databases.listDocuments(
+    appwriteConfig.databaseId,
+    appwriteConfig.collections.orders,
+    [
+      Query.equal('establishmentId', establishmentId),
+      Query.equal('status', ['pending', 'preparing', 'ready']),
+      Query.orderAsc('$createdAt'),
+      Query.limit(500),
+    ],
+  );
+
+  return toPlainObject<OrderDocument[]>(res.documents);
+}
+
+/**
+ * Atualiza múltiplos pedidos pertencentes ao estabelecimento para um novo status em lote.
+ */
+export async function batchUpdateOrdersStatus(
+  establishmentId: string,
+  orderIds: string[],
+  status: OrderStatus,
+): Promise<number> {
+  const { databases } = createAdminClient();
+  let updatedCount = 0;
+
+  for (const orderId of orderIds) {
+    try {
+      const existing = await databases.getDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.collections.orders,
+        orderId,
+      );
+      if (existing.establishmentId === establishmentId) {
+        await databases.updateDocument(
+          appwriteConfig.databaseId,
+          appwriteConfig.collections.orders,
+          orderId,
+          { status },
+        );
+        updatedCount++;
+      }
+    } catch (err) {
+      console.error(`[Orders] Erro ao atualizar pedido ${orderId}:`, err);
+    }
+  }
+
+  return updatedCount;
+}

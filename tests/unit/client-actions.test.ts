@@ -6,6 +6,7 @@ import {
   callWaiterAction,
   requestPixCheckoutAction,
   pollPixStatusAction,
+  clearClientSessionAction,
   ActionResult,
 } from '@/actions/client';
 import {
@@ -13,6 +14,7 @@ import {
   generateParticipantToken,
 } from '@/lib/security/client-session';
 import { generateTableToken } from '@/lib/security/table-token';
+import { encryptSecret } from '@/lib/security/encryption';
 import * as tablesDb from '@/lib/appwrite/tables';
 import * as clientSessionsDb from '@/lib/appwrite/client-sessions';
 import * as ordersDb from '@/lib/appwrite/orders';
@@ -577,6 +579,58 @@ describe('Client Server Actions', () => {
       expect(res.data?.amountCents).toBe(8000);
       expect(res.data?.value).toBe(80);
     });
+
+    it('decrypts encrypted subaccount apiKey when emitting PIX', async () => {
+      const plainApiKey = 'real_secret_subaccount_api_key_999';
+      const encryptedKey = encryptSecret(plainApiKey);
+
+      const token = await generateParticipantToken({
+        participantId: 'part_111',
+        participantName: 'Carlos',
+        sessionId: 'session_789',
+        tableId: 'table_123',
+        establishmentId: 'est_456',
+      });
+      mockCookieMap.set(PARTICIPANT_COOKIE_NAME, token);
+
+      mockGetDocument.mockImplementation(async (db, coll, id) => {
+        if (id === 'est_456') {
+          return {
+            ...mockEstablishment,
+            asaasSubaccountApiKey: encryptedKey,
+          };
+        }
+        if (id === 'table_123') return mockTable;
+        return null;
+      });
+
+      vi.mocked(clientSessionsDb.getTableSession).mockResolvedValueOnce({
+        $id: 'session_789',
+        establishmentId: 'est_456',
+        tableId: 'table_123',
+        tableNumber: 7,
+        status: 'open',
+        totalAmount: 5000,
+        paidAmount: 0,
+        participants: JSON.stringify([
+          { id: 'part_111', name: 'Carlos', isPaid: false, paidAmount: 0 },
+        ]),
+      } as any);
+
+      vi.mocked(asaasPix.createPixPaymentOnSubaccount).mockResolvedValueOnce({
+        paymentId: 'pay_enc_123',
+        pixQrCodeBase64: 'base64...',
+        pixCopyPaste: '00020126...',
+        expirationDate: '2026-11-03 14:00:00',
+      });
+
+      await requestPixCheckoutAction('total', validCpf);
+
+      expect(asaasPix.createPixPaymentOnSubaccount).toHaveBeenCalledWith(
+        plainApiKey,
+        expect.any(Object),
+      );
+    });
   });
 
   describe('pollPixStatusAction', () => {
@@ -603,7 +657,13 @@ describe('Client Server Actions', () => {
       expect(mockCookieDelete).not.toHaveBeenCalled();
     });
 
-    it('settles participant payment and revokes cookie when paid', async () => {
+    it('clears participant session cookie only when clearClientSessionAction is explicitly called', async () => {
+      const res = await clearClientSessionAction();
+      expect(res.success).toBe(true);
+      expect(mockCookieDelete).toHaveBeenCalledWith(PARTICIPANT_COOKIE_NAME);
+    });
+
+    it('settles participant payment and keeps cookie until finish is clicked', async () => {
       const token = await generateParticipantToken({
         participantId: 'part_111',
         participantName: 'Carlos',
@@ -635,6 +695,12 @@ describe('Client Server Actions', () => {
         'part_111',
         5000,
       );
+      expect(mockCookieDelete).not.toHaveBeenCalled();
+    });
+
+    it('clears participant session cookie only when clearClientSessionAction is explicitly called', async () => {
+      const res = await clearClientSessionAction();
+      expect(res.success).toBe(true);
       expect(mockCookieDelete).toHaveBeenCalledWith(PARTICIPANT_COOKIE_NAME);
     });
   });

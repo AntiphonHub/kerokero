@@ -251,3 +251,21 @@ export async function updateHappyHourSettings(
 
   return toPlainObject<EstablishmentDocument>(updated);
 }
+
+
+export async function updateEstablishmentBankPixKey(
+  establishmentId: string,
+  bankPixKey: string,
+): Promise<EstablishmentDocument> {
+  const { databases } = createAdminClient();
+  const updated = await databases.updateDocument(
+    appwriteConfig.databaseId,
+    appwriteConfig.collections.establishments,
+    establishmentId,
+    {
+      bankPixKey,
+    },
+  );
+
+  return toPlainObject<EstablishmentDocument>(updated);
+}

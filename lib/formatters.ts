@@ -23,3 +23,33 @@ export function maskCurrencyInput(val: string): string {
     maximumFractionDigits: 2,
   });
 }
+
+/**
+ * Formata datas garantindo o fuso horário oficial de Brasília (America/Sao_Paulo).
+ * Trata tanto strings de apenas data 'YYYY-MM-DD' (evitando o recuo de UTC midnight)
+ * quanto timestamps completos ISO/SQL.
+ */
+export function formatBrasiliaDateTime(dateStr?: string | null): string {
+  if (!dateStr) return '-';
+  const trimmed = dateStr.trim();
+
+  // Data pura (ex: "2026-11-04") sem hora: evita converter para UTC midnight que volta 1 dia
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    const [year, month, day] = trimmed.split('-');
+    return `${day}/${month}/${year}`;
+  }
+
+  try {
+    const date = new Date(trimmed);
+    return date.toLocaleString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'America/Sao_Paulo',
+    });
+  } catch {
+    return trimmed;
+  }
+}

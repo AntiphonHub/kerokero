@@ -3,6 +3,7 @@ import {
   formatCentsToBrl,
   parseBrlToCents,
   maskCurrencyInput,
+  formatBrasiliaDateTime,
 } from '@/lib/formatters';
 
 describe('formatters', () => {
@@ -22,5 +23,25 @@ describe('formatters', () => {
     expect(maskCurrencyInput('2500')).toBe('25,00');
     expect(maskCurrencyInput('100')).toBe('1,00');
     expect(maskCurrencyInput('')).toBe('');
+  });
+
+  describe('formatBrasiliaDateTime', () => {
+    it('formata datas puras YYYY-MM-DD sem recuar para o dia anterior', () => {
+      expect(formatBrasiliaDateTime('2026-11-04')).toBe('04/11/2026');
+      expect(formatBrasiliaDateTime('2026-01-01')).toBe('01/01/2026');
+    });
+
+    it('formata timestamps ISO no fuso de Brasília America/Sao_Paulo (UTC-3)', () => {
+      // 21:00 UTC deve formatar para 18:00 em Brasília
+      const res = formatBrasiliaDateTime('2026-11-04T21:00:00Z');
+      expect(res).toContain('04/11/2026');
+      expect(res).toContain('18:00');
+    });
+
+    it('trata valores vazios ou nulos graciosamente', () => {
+      expect(formatBrasiliaDateTime(null)).toBe('-');
+      expect(formatBrasiliaDateTime(undefined)).toBe('-');
+      expect(formatBrasiliaDateTime('')).toBe('-');
+    });
   });
 });

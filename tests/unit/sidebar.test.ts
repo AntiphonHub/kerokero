@@ -70,6 +70,7 @@ describe('Sidebar Utilities', () => {
       expect(isRouteActive('/orders/123', '/orders')).toBe(true);
       expect(isRouteActive('/tables', '/kds')).toBe(false);
       expect(isRouteActive('/analytics', '/analytics')).toBe(true);
+      expect(isRouteActive('/wallet', '/wallet')).toBe(true);
       expect(isRouteActive('/settings', '/settings')).toBe(true);
     });
 

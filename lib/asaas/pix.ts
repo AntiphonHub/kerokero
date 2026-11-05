@@ -73,14 +73,44 @@ export async function createPixPaymentOnSubaccount(
     }),
   });
 
-  const pix = await asaasRequest<AsaasPixQrCode>(
-    `/payments/${payment.id}/pixQrCode`,
-    {
-      headers: {
-        access_token: subaccountApiKey,
+  let pix: AsaasPixQrCode;
+
+  try {
+    pix = await asaasRequest<AsaasPixQrCode>(
+      `/payments/${payment.id}/pixQrCode`,
+      {
+        headers: {
+          access_token: subaccountApiKey,
+        },
       },
-    },
-  );
+    );
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes('chave Pix cadastrada')) {
+      // Subconta recém-criada pode levar alguns segundos para ativar a chave Pix.
+      // Auto-provisiona chave aleatória (EVP) instantaneamente e retenta a emissão.
+      try {
+        await asaasRequest('/pix/addressKeys', {
+          method: 'POST',
+          headers: { access_token: subaccountApiKey },
+          body: JSON.stringify({ type: 'EVP' }),
+        });
+      } catch {
+        // Se a chave já estiver em provisionamento, segue para a retentativa
+      }
+
+      pix = await asaasRequest<AsaasPixQrCode>(
+        `/payments/${payment.id}/pixQrCode`,
+        {
+          headers: {
+            access_token: subaccountApiKey,
+          },
+        },
+      );
+    } else {
+      throw err;
+    }
+  }
 
   return {
     paymentId: payment.id,

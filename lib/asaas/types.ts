@@ -87,3 +87,29 @@ export interface AsaasWebhookEvent {
     billingType?: string;
   };
 }
+
+
+export interface AsaasBalance {
+  balance: number;
+  availableBalance: number;
+}
+
+export interface CreateTransferInput {
+  value: number;
+  pixAddressKey?: string;
+  pixAddressKeyType?: 'CPF' | 'CNPJ' | 'EMAIL' | 'PHONE' | 'EVP';
+  description?: string;
+}
+
+export interface AsaasTransfer {
+  id: string;
+  dateCreated?: string;
+  value: number;
+  netValue?: number;
+  status: string;
+  transferFee?: number;
+  effectiveDate?: string;
+  scheduleDate?: string;
+  type?: string;
+  transactionReceiptUrl?: string;
+}

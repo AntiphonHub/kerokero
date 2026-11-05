@@ -50,6 +50,7 @@ import {
 import { createAsaasCustomer, createOrGetAsaasCustomer } from '@/lib/asaas/customers';
 import { createAsaasSubscription } from '@/lib/asaas/subscriptions';
 import { createAsaasSubaccount } from '@/lib/asaas/subaccounts';
+import { decryptSecret } from '@/lib/security/encryption';
 
 describe('Onboarding Server Actions', () => {
   beforeEach(() => {
@@ -167,6 +168,7 @@ describe('Onboarding Server Actions', () => {
       vi.mocked(createAsaasSubaccount).mockResolvedValueOnce({
         id: 'act_test_789',
         walletId: 'wal_test_000',
+        apiKey: '$aact_test_key_123',
       } as any);
 
       vi.mocked(saveSubaccountAndActivate).mockResolvedValueOnce({
@@ -196,7 +198,21 @@ describe('Onboarding Server Actions', () => {
       expect(createOrGetAsaasCustomer).toHaveBeenCalled();
       expect(createAsaasSubscription).toHaveBeenCalled();
       expect(createAsaasSubaccount).toHaveBeenCalled();
-      expect(saveSubaccountAndActivate).toHaveBeenCalled();
+      expect(saveSubaccountAndActivate).toHaveBeenCalledWith(
+        'est_123',
+        expect.objectContaining({
+          asaas: expect.objectContaining({
+            customerId: 'cus_test_123',
+            subscriptionId: 'sub_test_456',
+            subaccountId: 'act_test_789',
+            walletId: 'wal_test_000',
+            subaccountApiKey: expect.stringMatching(/^enc:v[12]:/),
+          }),
+        }),
+      );
+
+      const callArgs = vi.mocked(saveSubaccountAndActivate).mock.calls[0][1];
+      expect(decryptSecret(callArgs.asaas.subaccountApiKey)).toBe('$aact_test_key_123');
     });
   });
 
