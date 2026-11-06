@@ -1,6 +1,13 @@
 import type { Metadata } from 'next';
 import { connection } from 'next/server';
 import { getLoggedInUser } from '@/lib/appwrite/session';
+import { getEstablishmentByUserId } from '@/lib/appwrite/establishments';
+import { getDashboardData } from '@/lib/appwrite/dashboard';
+import { PeriodSelector } from '@/components/dashboard/period-selector';
+import { MetricsCards } from '@/components/dashboard/metrics-cards';
+import { SalesChart } from '@/components/dashboard/sales-chart';
+import { TopProductsChart } from '@/components/dashboard/top-products-chart';
+import { LiveServiceCalls } from '@/components/dashboard/live-service-calls';
 
 export const metadata: Metadata = {
   title: 'Dashboard | KeroKero',
@@ -9,52 +16,81 @@ export const metadata: Metadata = {
 
 export const instant = false;
 
-export default async function DashboardPage() {
+interface DashboardPageProps {
+  searchParams: Promise<{ range?: string }>;
+}
+
+export default async function DashboardPage({ searchParams }: DashboardPageProps) {
   await connection();
   const user = await getLoggedInUser();
+  const resolvedSearchParams = await searchParams;
+  const range = resolvedSearchParams?.range;
+
+  const establishment = user ? await getEstablishmentByUserId(user.$id) : null;
+  const dashboardData = establishment
+    ? await getDashboardData(establishment.$id, range)
+    : null;
+
+  if (!dashboardData) {
+    return (
+      <div className="flex flex-col gap-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
+            Olá, {user?.name || 'Lojista'}!
+          </h1>
+          <p className="text-sm text-zinc-500 mt-1">
+            Estabelecimento não configurado ou em processo de abertura.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const chartTitle =
+    dashboardData.range === '7d' ? 'Vendas por Dia' : 'Vendas por Hora';
+
+  const chartSubtitle =
+    dashboardData.range === '7d'
+      ? 'Faturamento bruto acumulado nos últimos 7 dias'
+      : `Distribuição horária do faturamento (${dashboardData.range === 'today' ? 'Hoje' : 'Ontem'})`;
 
   return (
-    <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
-          Olá, {user?.name || 'Lojista'}!
-        </h1>
-        <p className="text-sm text-zinc-500 mt-1">
-          Bem-vindo ao painel de gestão da comanda digital KeroKero.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs">
-          <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Status da Loja</p>
-          <div className="mt-3 flex items-center gap-2">
-            <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
-            <span className="text-base font-semibold text-zinc-900">Operação Ativa</span>
-          </div>
-          <p className="mt-2 text-xs text-zinc-500">Pronto para receber pedidos nas mesas</p>
+    <div className="flex flex-col gap-6">
+      {/* Cabeçalho com Saudação e Seletor de Período */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
+            Olá, {user?.name || 'Lojista'}!
+          </h1>
+          <p className="text-sm text-zinc-500 mt-0.5">
+            Métricas operacionais e financeiras de {establishment?.name || 'seu negócio'}.
+          </p>
         </div>
 
-        <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs">
-          <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Mesas Ativas</p>
-          <p className="mt-3 text-3xl font-extrabold text-zinc-900">0</p>
-          <p className="mt-2 text-xs text-zinc-500">Nenhuma comanda aberta no momento</p>
-        </div>
-
-        <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs">
-          <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Total de Pedidos Hoje</p>
-          <p className="mt-3 text-3xl font-extrabold text-zinc-900">R$ 0,00</p>
-          <p className="mt-2 text-xs text-zinc-500">0 pedidos processados</p>
+        <div className="self-start sm:self-auto">
+          <PeriodSelector currentRange={dashboardData.range} />
         </div>
       </div>
 
-      <div className="rounded-2xl border border-zinc-200 bg-white p-6">
-        <h2 className="text-base font-semibold text-zinc-900 mb-2">Conta & Perfil</h2>
-        <div className="text-xs space-y-1 text-zinc-600 font-mono">
-          <p><strong className="font-semibold text-zinc-800">ID:</strong> {user?.$id}</p>
-          <p><strong className="font-semibold text-zinc-800">E-mail:</strong> {user?.email}</p>
-          <p><strong className="font-semibold text-zinc-800">Telefone:</strong> {user?.phone || 'Não informado'}</p>
-        </div>
+      {/* Cards de Métricas Principais */}
+      <MetricsCards
+        metrics={dashboardData.metrics}
+        liveStatus={dashboardData.liveStatus}
+        range={dashboardData.range}
+      />
+
+      {/* Seção de Gráficos em Duas Colunas */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <SalesChart
+          data={dashboardData.salesOverTime}
+          title={chartTitle}
+          subtitle={chartSubtitle}
+        />
+        <TopProductsChart data={dashboardData.topProducts} />
       </div>
+
+      {/* Seção de Chamados Recentes Ao Vivo */}
+      <LiveServiceCalls initialCalls={dashboardData.recentServiceCalls} />
     </div>
   );
 }

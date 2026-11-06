@@ -269,3 +269,18 @@ export async function updateEstablishmentBankPixKey(
 
   return toPlainObject<EstablishmentDocument>(updated);
 }
+
+
+export async function updateEstablishmentData(
+  establishmentId: string,
+  data: Record<string, unknown>,
+): Promise<EstablishmentDocument> {
+  const { databases } = createAdminClient();
+  const updated = await databases.updateDocument(
+    appwriteConfig.databaseId,
+    appwriteConfig.collections.establishments,
+    establishmentId,
+    data,
+  );
+  return toPlainObject<EstablishmentDocument>(updated);
+}

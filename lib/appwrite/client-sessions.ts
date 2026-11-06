@@ -13,7 +13,12 @@ export interface SessionParticipant {
   paidAmount: number;
 }
 
+export type PaymentMethodType = 'pix_asaas' | 'pos_card' | 'cash' | 'mixed';
+
 export interface TableSessionDocument extends Models.DefaultDocument {
+  pixPaidAmount?: number;
+  posPaidAmount?: number;
+  paymentMethod?: PaymentMethodType;
   establishmentId: string;
   tableId: string;
   tableNumber: number;
@@ -210,6 +215,9 @@ export async function settleParticipantPayment(
 
   const newPaidAmount = (sessionDoc.paidAmount || 0) + amountCents;
   const isFullyPaid = sessionDoc.totalAmount > 0 && newPaidAmount >= sessionDoc.totalAmount;
+  const newPixPaidAmount = (sessionDoc.pixPaidAmount || 0) + amountCents;
+  const currentPosPaid = sessionDoc.posPaidAmount || 0;
+  const paymentMethod: PaymentMethodType = currentPosPaid > 0 ? 'mixed' : 'pix_asaas';
   const status = isFullyPaid ? 'closed' : sessionDoc.status;
   const closedAt = isFullyPaid ? new Date().toISOString() : sessionDoc.closedAt || null;
 
@@ -295,6 +303,7 @@ export async function getActiveTableSession(tableId: string): Promise<TableSessi
  */
 export async function closeAndSettleEntireTableSession(
   tableId: string,
+  paymentMethodOption: 'pos_card' | 'cash' = 'pos_card',
 ): Promise<{ table: TableDocument; session: TableSessionDocument | null }> {
   const { databases } = createAdminClient();
 

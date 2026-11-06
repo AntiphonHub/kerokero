@@ -60,3 +60,11 @@ export async function getAsaasSubscriptionPayments(
   }>(`/payments?subscription=${subscriptionId}`);
   return res.data || [];
 }
+
+
+export async function cancelAsaasSubscription(subscriptionId: string): Promise<boolean> {
+  await asaasRequest(`/subscriptions/${subscriptionId}`, {
+    method: 'DELETE',
+  });
+  return true;
+}

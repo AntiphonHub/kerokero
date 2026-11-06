@@ -32,15 +32,15 @@ export default async function AppLayout({
   }
 
   return (
-    <div className="min-h-screen bg-[#F4F4F5] text-zinc-900 flex flex-col md:flex-row overflow-x-hidden">
+    <div className="min-h-screen md:h-screen md:overflow-hidden bg-[#F4F4F5] text-zinc-900 flex flex-col md:flex-row">
       {/* Sidebar Flutuante com margem e cantos arredondados (desktop) e Drawer (mobile) */}
       <MerchantSidebar
         establishmentName={establishment?.name}
         tablesCount={establishment?.tablesCount}
       />
 
-      {/* Conteúdo Principal da Aplicação ocupando toda a largura */}
-      <main className="flex-1 min-w-0 p-3.5 sm:p-5 md:p-6 lg:p-8 overflow-y-auto">
+      {/* Conteúdo Principal da Aplicação com rolagem independente no desktop */}
+      <main className="flex-1 min-w-0 p-3.5 sm:p-5 md:p-6 lg:p-8 md:h-screen md:overflow-y-auto">
         {children}
       </main>
     </div>

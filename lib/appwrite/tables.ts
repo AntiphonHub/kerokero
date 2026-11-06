@@ -329,3 +329,99 @@ export async function resetTableSession(tableId: string): Promise<TableDocument>
 
   return toPlainObject<TableDocument>(updated);
 }
+
+
+export async function adjustEstablishmentTablesCapacity(
+  establishmentId: string,
+  newCount: number,
+): Promise<{ success: boolean; message?: string; count?: number }> {
+  if (newCount < 1 || newCount > 100) {
+    return { success: false, message: 'A quantidade de mesas deve ser entre 1 e 100.' };
+  }
+
+  const { databases } = createAdminClient();
+
+  const existingRes = await databases.listDocuments(
+    appwriteConfig.databaseId,
+    appwriteConfig.collections.tables,
+    [
+      Query.equal('establishmentId', establishmentId),
+      Query.limit(500),
+      Query.orderAsc('number'),
+    ],
+  );
+
+  const existingTables = existingRes.documents as unknown as TableDocument[];
+  const existingMap = new Map<number, TableDocument>();
+  for (const t of existingTables) {
+    existingMap.set(t.number, t);
+  }
+
+  // 1. Redução de capacidade: verificar se mesas excedentes estão ocupadas
+  const tablesToDeactivate: TableDocument[] = [];
+  for (const [num, table] of existingMap.entries()) {
+    if (num > newCount && table.isActive !== false) {
+      if (table.status !== 'idle' || table.activeSessionId) {
+        return {
+          success: false,
+          message: `Não é possível reduzir para ${newCount} mesas: a Mesa ${String(num).padStart(2, '0')} possui comanda em andamento.`,
+        };
+      }
+      tablesToDeactivate.push(table);
+    }
+  }
+
+  // Desativa mesas excedentes livres
+  for (const table of tablesToDeactivate) {
+    await databases.updateDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.collections.tables,
+      table.$id,
+      { isActive: false },
+    );
+  }
+
+  // 2. Aumento de capacidade: reativa ou cria mesas até newCount
+  for (let num = 1; num <= newCount; num++) {
+    const existing = existingMap.get(num);
+    if (existing) {
+      if (existing.isActive === false) {
+        await databases.updateDocument(
+          appwriteConfig.databaseId,
+          appwriteConfig.collections.tables,
+          existing.$id,
+          { isActive: true },
+        );
+      }
+    } else {
+      const paddedNumber = String(num).padStart(2, '0');
+      await databases.createDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.collections.tables,
+        ID.unique(),
+        {
+          establishmentId,
+          number: num,
+          label: `Mesa ${paddedNumber}`,
+          token: generateTableToken(),
+          status: 'idle',
+          activeSessionId: null,
+          currentTotal: 0,
+          lastActivityAt: new Date().toISOString(),
+          serviceCallReason: null,
+          isActive: true,
+        },
+      );
+    }
+  }
+
+  // 3. Atualiza tablesCount no estabelecimento
+  await databases.updateDocument(
+    appwriteConfig.databaseId,
+    appwriteConfig.collections.establishments,
+    establishmentId,
+    { tablesCount: newCount },
+  );
+
+  return { success: true, count: newCount };
+}

@@ -145,14 +145,14 @@ export function MerchantSidebar({
         />
       )}
 
-      {/* Sidebar Principal (Drawer no Mobile, Flutuante no Desktop) */}
+      {/* Sidebar Principal (Drawer no Mobile, Flutuante e Fixa no Desktop) */}
       <aside
         data-testid="merchant-sidebar"
         aria-label="Menu Principal"
         className={cn(
           'flex flex-col bg-white border border-zinc-200/80 shadow-xs transition-all duration-300 ease-in-out',
           // Mobile Drawer: fixado na lateral da tela inteira
-          'fixed inset-y-0 left-0 z-50 w-72 p-4 md:static',
+          'fixed inset-y-0 left-0 z-50 w-72 p-4 md:sticky md:top-3 md:self-start',
           isMobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full md:translate-x-0',
           // Desktop: flutuante com margem e cantos arredondados
           'md:h-[calc(100vh-1.5rem)] md:my-3 md:ml-3 md:p-3 md:rounded-2xl md:z-30 md:shrink-0',

@@ -130,7 +130,7 @@ describe('Tables Server Actions', () => {
 
       const res = await settleAndCloseTableAction('t1');
       expect(res.success).toBe(true);
-      expect(mockCloseAndSettleEntireTableSession).toHaveBeenCalledWith('t1');
+      expect(mockCloseAndSettleEntireTableSession).toHaveBeenCalledWith('t1', 'pos_card');
       expect(res.data?.table.status).toBe('idle');
     });
   });

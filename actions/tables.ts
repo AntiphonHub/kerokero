@@ -154,6 +154,7 @@ export async function getTableDetailsAction(tableId: string): Promise<{
  */
 export async function settleAndCloseTableAction(
   tableId: string,
+  paymentMethod: 'pos_card' | 'cash' = 'pos_card',
 ): Promise<ActionResponse<{ table: TableDocument; session: TableSessionDocument | null }>> {
   try {
     const user = await getLoggedInUser();
@@ -171,7 +172,7 @@ export async function settleAndCloseTableAction(
       return { success: false, message: 'Mesa não encontrada ou não pertence ao seu restaurante.' };
     }
 
-    const result = await closeAndSettleEntireTableSession(tableId);
+    const result = await closeAndSettleEntireTableSession(tableId, paymentMethod);
 
     return {
       success: true,
