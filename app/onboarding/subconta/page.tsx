@@ -34,7 +34,7 @@ export default async function OnboardingSubcontaPage() {
 
       <div className="mb-7">
         <h1 className="text-2xl sm:text-[28px] font-extrabold tracking-[-0.03em] text-zinc-900 leading-tight mb-1.5">
-          Abertura de subconta de recebimento
+          Conta bancária de recebimento
         </h1>
         <p className="text-sm sm:text-[15px] text-zinc-500 font-medium">
           Dados bancários e documentação para repasse de PIX e fechamento de comandas.

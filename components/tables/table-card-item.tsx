@@ -83,7 +83,7 @@ export function TableCardItem({
                 className="font-black text-sm uppercase tracking-tight truncate max-w-full leading-none"
                 style={{ color: textColor }}
               >
-                {establishmentName || 'KeroKero'}
+                {establishmentName || 'Bempedi'}
               </span>
             )}
             <span
@@ -151,7 +151,7 @@ export function TableCardItem({
               className="font-black text-xs uppercase tracking-tight truncate max-w-full"
               style={{ color: textColor }}
             >
-              {establishmentName || 'KeroKero'}
+              {establishmentName || 'Bempedi'}
             </span>
           )}
           <span
@@ -231,7 +231,7 @@ export function TableCardItem({
             )}
             style={{ color: textColor }}
           >
-            {establishmentName || 'KeroKero'}
+            {establishmentName || 'Bempedi'}
           </span>
         )}
 

@@ -41,7 +41,7 @@ export function SettingsView({ establishment, initialTab = 'store' }: SettingsVi
       <div>
         <h1 className="text-xl font-bold tracking-tight text-zinc-900">Configurações</h1>
         <p className="text-xs text-zinc-500 mt-0.5">
-          Gerencie parâmetros cadastrais da sua loja, capacidade do salão, credenciais e plano SaaS.
+          Gerencie parâmetros cadastrais da sua loja, capacidade do salão, credenciais e mensalidade do sistema.
         </p>
       </div>
 

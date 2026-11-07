@@ -56,7 +56,7 @@ describe('productInputSchema', () => {
   const baseValidProduct = {
     name: 'X-Burger Especial',
     description: 'Pão brioche, hambúrguer 180g e queijo prato',
-    imageUrl: 'https://cdn.kerokero.app/products/burger.jpg',
+    imageUrl: 'https://cdn.bempedi.com/products/burger.jpg',
     price: 3200, // R$ 32,00
     happyHourPrice: 2800, // R$ 28,00
     stockQuantity: 20,

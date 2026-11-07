@@ -11,7 +11,7 @@ import { MenuView } from '@/components/menu/menu-view';
 export const instant = false;
 
 export const metadata = {
-  title: 'Cardápio & Produtos | KeroKero',
+  title: 'Cardápio & Produtos | Bempedi',
   description: 'Gerencie o catálogo de produtos e cardápio digital do seu estabelecimento.',
 };
 

@@ -70,7 +70,7 @@ export default async function ClientTablePage(props: PageProps) {
 
   // 3. Buscar nome do estabelecimento
   const establishment = await getEstablishmentById(table.establishmentId);
-  const establishmentName = establishment?.name || 'KeroKero';
+  const establishmentName = establishment?.name || 'Bempedi';
   const tableLabel = table.label || `Mesa ${table.number}`;
 
   // 4. Verificar sessão ativa do participante

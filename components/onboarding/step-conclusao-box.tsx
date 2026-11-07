@@ -310,10 +310,10 @@ export function StepConclusaoBox({
             Loja configurada com sucesso
           </h1>
           <p className="text-sm sm:text-[15px] text-zinc-500 leading-relaxed max-w-[490px] mb-7">
-            Os dados da sua loja foram registrados e a subconta bancária foi enviada para análise.
+            Os dados da sua loja foram registrados e sua conta de recebimentos foi enviada para análise.
             {isSubscriber
-              ? ' Sua assinatura está ativa e seu acesso ao painel está liberado.'
-              : ' Para liberar o acesso ao painel, efetue o pagamento da assinatura via PIX abaixo.'}
+              ? ' Sua conta está ativa e seu acesso ao painel está liberado.'
+              : ' Para liberar o acesso ao painel, efetue o pagamento da mensalidade via PIX abaixo.'}
           </p>
         </motion.div>
 
@@ -351,7 +351,7 @@ export function StepConclusaoBox({
 
           <div className="flex items-center justify-between py-1 border-b border-zinc-200/60">
             <span className="text-xs sm:text-[13.5px] text-zinc-500 font-medium">
-              Subconta bancária
+              Conta de recebimentos
             </span>
             <span className="text-xs sm:text-[13.5px] font-bold text-zinc-900 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-amber-500" />
@@ -361,7 +361,7 @@ export function StepConclusaoBox({
 
           <div className="flex items-center justify-between pt-1">
             <span className="text-xs sm:text-[13.5px] text-zinc-500 font-medium">
-              Status da Assinatura
+              Status da Mensalidade
             </span>
             <span className="text-xs sm:text-[13.5px] font-bold text-zinc-900 flex items-center gap-2">
               {isSubscriber ? (
@@ -405,7 +405,7 @@ export function StepConclusaoBox({
             >
               <div className="space-y-1">
                 <span className="text-xs font-bold text-amber-600 uppercase tracking-wider">
-                  Assinatura KeroKero Pro
+                  Mensalidade Bempedi
                 </span>
                 <h2 className="text-lg font-extrabold text-zinc-900">
                   R$ 149,00 / mês
@@ -419,7 +419,7 @@ export function StepConclusaoBox({
                 <div className="flex justify-center my-3">
                   <img
                     src={`data:image/png;base64,${pixImage}`}
-                    alt="QR Code PIX Assinatura KeroKero"
+                    alt="QR Code PIX Mensalidade Bempedi"
                     className="w-44 h-44 rounded-xl border border-zinc-200 p-2 bg-white"
                   />
                 </div>
@@ -471,7 +471,7 @@ export function StepConclusaoBox({
                 : 'bg-zinc-200 text-zinc-400 cursor-not-allowed'
             }`}
           >
-            {isSubscriber ? 'Acessar Painel de Controle' : 'Aguardando Ativação da Assinatura...'}
+            {isSubscriber ? 'Acessar Painel de Controle' : 'Aguardando Pagamento da Mensalidade...'}
           </button>
 
           {isSubscriber && (

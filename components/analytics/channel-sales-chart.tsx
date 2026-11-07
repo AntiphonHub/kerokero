@@ -58,7 +58,7 @@ export function ChannelSalesChart({ data }: ChannelSalesChartProps) {
           Evolução de Vendas por Canal
         </h2>
         <p className="text-xs text-zinc-500 mt-0.5">
-          Composição temporal dos recebimentos via PIX Asaas e Maquininha física
+          Composição temporal dos recebimentos via PIX e Maquininha física
         </p>
       </div>
 
@@ -96,7 +96,7 @@ export function ChannelSalesChart({ data }: ChannelSalesChartProps) {
                 wrapperStyle={{ paddingBottom: '12px', fontSize: '11px' }}
               />
               <Bar
-                name="PIX Asaas"
+                name="PIX"
                 dataKey="pixRevenue"
                 stackId="channel"
                 fill="#F59E0B"

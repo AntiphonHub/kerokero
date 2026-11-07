@@ -67,7 +67,7 @@ export function generatePrintHtml(options: PrintCardOptions): string {
               ${
                 effectiveLogo
                   ? `<img src="${effectiveLogo}" alt="Logo" class="logo-img-h" />`
-                  : `<div class="store-name-h" style="color: ${textColor};">${establishmentName || 'KeroKero'}</div>`
+                  : `<div class="store-name-h" style="color: ${textColor};">${establishmentName || 'Bempedi'}</div>`
               }
               <div class="powered-by" style="color: ${textColor}; opacity: 0.75;">${poweredByText}</div>
             </div>
@@ -88,7 +88,7 @@ export function generatePrintHtml(options: PrintCardOptions): string {
             ${
               effectiveLogo
                 ? `<img src="${effectiveLogo}" alt="Logo" class="logo-img-v" />`
-                : `<div class="store-name-v" style="color: ${textColor};">${establishmentName || 'KeroKero'}</div>`
+                : `<div class="store-name-v" style="color: ${textColor};">${establishmentName || 'Bempedi'}</div>`
             }
             <div class="powered-by" style="color: ${textColor}; opacity: 0.75;">${poweredByText}</div>
           </div>
@@ -112,7 +112,7 @@ export function generatePrintHtml(options: PrintCardOptions): string {
           ${
             effectiveLogo
               ? `<img src="${effectiveLogo}" alt="Logo" class="${isCompact ? 'logo-img-sq-compact' : 'logo-img-sq'}" />`
-              : `<div class="${isCompact ? 'store-name-compact' : 'store-name'}" style="color: ${textColor};">${establishmentName || 'KeroKero'}</div>`
+              : `<div class="${isCompact ? 'store-name-compact' : 'store-name'}" style="color: ${textColor};">${establishmentName || 'Bempedi'}</div>`
           }
           <div class="powered-by" style="color: ${textColor}; opacity: 0.75;">${poweredByText}</div>
         </div>

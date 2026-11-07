@@ -55,7 +55,7 @@ export async function getWalletDataAction(): Promise<WalletActionResponse<Wallet
     if (!establishment.asaasSubaccountApiKey) {
       return {
         success: false,
-        message: 'Subconta de pagamentos não configurada para este estabelecimento.',
+        message: 'Conta de recebimentos não configurada para este estabelecimento.',
       };
     }
 
@@ -119,7 +119,7 @@ export async function requestWithdrawalAction(
     if (!establishment.asaasSubaccountApiKey) {
       return {
         success: false,
-        message: 'Subconta de pagamentos não configurada.',
+        message: 'Conta de recebimentos não configurada.',
       };
     }
 
@@ -146,7 +146,7 @@ export async function requestWithdrawalAction(
       value: amount,
       pixAddressKey,
       ...(options?.pixAddressKeyType ? { pixAddressKeyType: options.pixAddressKeyType } : {}),
-      description: `Saque KeroKero - ${establishment.name}`,
+      description: `Saque Bempedi - ${establishment.name}`,
     });
 
     // Se o usuário digitou uma nova chave Pix diferente da atual, salva como nova chave cadastrada
@@ -170,11 +170,13 @@ export async function requestWithdrawalAction(
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : String(error);
     console.error('[Wallet Action] Erro ao solicitar saque:', msg);
+    let userMsg = msg;
+    if (/asaas/i.test(userMsg)) {
+      userMsg = 'Falha ao processar a transferência. Verifique a chave Pix informada ou tente novamente mais tarde.';
+    }
     return {
       success: false,
-      message: msg.includes('Asaas')
-        ? msg
-        : 'Falha ao processar o saque. Verifique seus dados bancários ou tente novamente mais tarde.',
+      message: userMsg || 'Falha ao processar o saque. Verifique seus dados bancários ou tente novamente mais tarde.',
     };
   }
 }

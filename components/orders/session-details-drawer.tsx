@@ -21,9 +21,9 @@ export function SessionDetailsDrawer({ session, orders, onClose }: SessionDetail
     switch (session.paymentMethod) {
       case 'pix_asaas':
         return {
-          label: 'PIX Asaas (Digital)',
+          label: 'PIX (Digital)',
           icon: QrCode,
-          description: 'Liquidado diretamente na subconta Asaas.',
+          description: 'Liquidado diretamente via PIX instantâneo.',
           badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
         };
       case 'pos_card':

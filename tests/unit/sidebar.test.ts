@@ -25,11 +25,11 @@ describe('Sidebar Utilities', () => {
       expect(getEstablishmentInitials('B')).toBe('B');
     });
 
-    it('handles empty, null or undefined gracefully with fallback KK', () => {
-      expect(getEstablishmentInitials('')).toBe('KK');
-      expect(getEstablishmentInitials('   ')).toBe('KK');
-      expect(getEstablishmentInitials(null)).toBe('KK');
-      expect(getEstablishmentInitials(undefined)).toBe('KK');
+    it('handles empty, null or undefined gracefully with fallback BE', () => {
+      expect(getEstablishmentInitials('')).toBe('BE');
+      expect(getEstablishmentInitials('   ')).toBe('BE');
+      expect(getEstablishmentInitials(null)).toBe('BE');
+      expect(getEstablishmentInitials(undefined)).toBe('BE');
     });
 
     it('ignores extra spaces and punctuation', () => {

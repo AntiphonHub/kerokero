@@ -1,17 +1,17 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 export function Brand() {
   return (
-    <Link href="/" className="flex items-center gap-2.5 no-underline">
-      <div className="grid h-6 w-6 grid-cols-2 gap-[3px]">
-        <div className="rounded-[2px] bg-zinc-900" />
-        <div className="rounded-[2px] bg-amber-500" />
-        <div className="rounded-[2px] bg-zinc-900" />
-        <div className="rounded-[2px] bg-zinc-900" />
-      </div>
-      <span className="text-xl font-extrabold tracking-[-0.04em] text-zinc-900">
-        kerokero
-      </span>
+    <Link href="/" className="inline-flex items-center no-underline hover:opacity-90 transition-opacity">
+      <Image
+        src="/images/logo.png"
+        alt="Bempedi"
+        width={140}
+        height={110}
+        className="h-12 w-auto object-contain"
+        priority
+      />
     </Link>
   );
 }

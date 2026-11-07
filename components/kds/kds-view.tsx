@@ -42,7 +42,7 @@ export function KdsView({ initialOrders, establishmentId }: KdsViewProps) {
 
   // Recupera preferência de áudio salva no cliente
   useEffect(() => {
-    const saved = localStorage.getItem('kerokero_kds_sound');
+    const saved = localStorage.getItem('bempedi_kds_sound') ?? localStorage.getItem('kerokero_kds_sound');
     if (saved === 'true') {
       setSoundEnabled(true);
     }
@@ -51,7 +51,7 @@ export function KdsView({ initialOrders, establishmentId }: KdsViewProps) {
   const toggleSound = () => {
     const next = !soundEnabled;
     setSoundEnabled(next);
-    localStorage.setItem('kerokero_kds_sound', String(next));
+    localStorage.setItem('bempedi_kds_sound', String(next));
     if (next) {
       playKitchenChime();
     }

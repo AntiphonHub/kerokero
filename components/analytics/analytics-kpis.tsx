@@ -30,7 +30,7 @@ export function AnalyticsKPIs({ kpis }: AnalyticsKPIsProps) {
         </p>
       </div>
 
-      {/* 2. Mix de Pagamento (PIX Asaas vs Maquininha) */}
+      {/* 2. Mix de Pagamento (PIX vs Maquininha) */}
       <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs flex flex-col justify-between">
         <div>
           <div className="flex items-center justify-between">
@@ -46,7 +46,7 @@ export function AnalyticsKPIs({ kpis }: AnalyticsKPIsProps) {
             <div className="flex items-center justify-between">
               <span className="text-zinc-600 flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-amber-500" />
-                PIX Asaas ({kpis.pixPercentage}%)
+                PIX ({kpis.pixPercentage}%)
               </span>
               <span className="font-bold text-zinc-900">
                 {formatCentsToBrl(kpis.pixAsaasRevenue)}

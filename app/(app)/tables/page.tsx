@@ -6,7 +6,7 @@ import { TablesView } from '@/components/tables/tables-view';
 import { headers } from 'next/headers';
 
 export const metadata = {
-  title: 'Mesas & Comandas | KeroKero',
+  title: 'Mesas & Comandas | Bempedi',
   description: 'Gestão de mesas, comandas digitais e chamados em tempo real.',
 };
 

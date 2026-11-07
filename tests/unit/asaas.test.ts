@@ -81,7 +81,7 @@ describe('Asaas Services', () => {
       const sub = await createAsaasSubscription({
         customerId: 'cus_000005912345',
         value: 149.0,
-        description: 'Assinatura KeroKero',
+        description: 'Assinatura Bempedi',
       });
 
       expect(sub.id).toBe('sub_000001');

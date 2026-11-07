@@ -445,7 +445,7 @@ export async function requestPixCheckoutAction(
     if (!establishment || !establishment.asaasSubaccountApiKey) {
       return {
         success: false,
-        message: 'Estabelecimento ainda não configurou a subconta para recebimento PIX.',
+        message: 'Estabelecimento ainda não configurou o recebimento via PIX.',
       };
     }
 
@@ -523,7 +523,7 @@ export async function requestPixCheckoutAction(
         customerName: session.participantName,
         customerCpf: payerCpf,
         value: valueInReais,
-        description: `KeroKero - Mesa ${tableNumber} (${session.participantName})`,
+        description: `Bempedi - Mesa ${tableNumber} (${session.participantName})`,
       },
     );
 

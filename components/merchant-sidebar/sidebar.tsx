@@ -3,6 +3,7 @@
 import { useSyncExternalStore, useRef, useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { isRouteActive } from '@/lib/utils/sidebar';
 import { Menu, X } from 'lucide-react';
@@ -32,14 +33,14 @@ interface MerchantSidebarProps {
   className?: string;
 }
 
-const STORAGE_KEY = 'kerokero_sidebar_collapsed';
+const STORAGE_KEY = 'bempedi_sidebar_collapsed';
 
 function subscribe(callback: () => void) {
   window.addEventListener('storage', callback);
-  window.addEventListener('kerokero_sidebar_change', callback);
+  window.addEventListener('bempedi_sidebar_change', callback);
   return () => {
     window.removeEventListener('storage', callback);
-    window.removeEventListener('kerokero_sidebar_change', callback);
+    window.removeEventListener('bempedi_sidebar_change', callback);
   };
 }
 
@@ -72,7 +73,7 @@ export function MerchantSidebar({
   const toggleSidebar = () => {
     const next = !isCollapsed;
     localStorage.setItem(STORAGE_KEY, String(next));
-    window.dispatchEvent(new Event('kerokero_sidebar_change'));
+    window.dispatchEvent(new Event('bempedi_sidebar_change'));
   };
 
   // Configuração dos itens do grupo "Sua Loja"
@@ -117,14 +118,15 @@ export function MerchantSidebar({
     <>
       {/* Barra de Topo no Mobile com botão de Menu */}
       <div className="flex md:hidden items-center justify-between px-4 py-3 bg-white border-b border-zinc-200/80 sticky top-0 z-30 w-full shrink-0">
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <div className="grid h-6 w-6 grid-cols-2 gap-[3px]">
-            <div className="rounded-[2px] bg-zinc-900" />
-            <div className="rounded-[2px] bg-amber-500" />
-            <div className="rounded-[2px] bg-zinc-900" />
-            <div className="rounded-[2px] bg-zinc-900" />
-          </div>
-          <span className="text-base font-bold tracking-tight text-zinc-900">kerokero</span>
+        <Link href="/dashboard" className="flex items-center">
+          <Image
+            src="/images/logo.png"
+            alt="Bempedi"
+            width={120}
+            height={96}
+            className="h-9 w-auto object-contain"
+            priority
+          />
         </Link>
 
         <button
@@ -169,16 +171,20 @@ export function MerchantSidebar({
         >
           {isCollapsed ? (
             <>
-              {/* Ícone Geométrico Brand quando colapsado */}
+              {/* Logo quando colapsado */}
               <Link
                 href="/dashboard"
-                className="hidden md:grid h-6 w-6 grid-cols-2 gap-[3px] p-0.5 hover:opacity-85 transition-opacity"
-                aria-label="KeroKero Home"
+                className="hidden md:flex items-center justify-center p-1 hover:opacity-85 transition-opacity"
+                aria-label="Bempedi Home"
               >
-                <div className="rounded-[2px] bg-zinc-900" />
-                <div className="rounded-[2px] bg-amber-500" />
-                <div className="rounded-[2px] bg-zinc-900" />
-                <div className="rounded-[2px] bg-zinc-900" />
+                <Image
+                  src="/images/logo.png"
+                  alt="Bempedi"
+                  width={96}
+                  height={76}
+                  className="h-9 w-auto object-contain max-w-[48px]"
+                  priority
+                />
               </Link>
 
               {/* Botão de Expandir com Tooltip no Desktop */}
@@ -197,18 +203,17 @@ export function MerchantSidebar({
                 </SidebarTooltip>
               </div>
 
-              {/* No mobile, mesmo colapsado no desktop, mostra a brand inteira + close */}
+              {/* No mobile, mesmo colapsado no desktop, mostra a logo inteira + close */}
               <div className="flex md:hidden items-center justify-between w-full">
-                <Link href="/dashboard" className="flex items-center gap-2.5">
-                  <div className="grid h-6 w-6 grid-cols-2 gap-[3px]">
-                    <div className="rounded-[2px] bg-zinc-900" />
-                    <div className="rounded-[2px] bg-amber-500" />
-                    <div className="rounded-[2px] bg-zinc-900" />
-                    <div className="rounded-[2px] bg-zinc-900" />
-                  </div>
-                  <span className="text-lg font-bold tracking-[-0.03em] text-zinc-900">
-                    kerokero
-                  </span>
+                <Link href="/dashboard" className="flex items-center">
+                  <Image
+                    src="/images/logo.png"
+                    alt="Bempedi"
+                    width={140}
+                    height={110}
+                    className="h-11 w-auto object-contain"
+                    priority
+                  />
                 </Link>
                 <button
                   type="button"
@@ -222,20 +227,19 @@ export function MerchantSidebar({
             </>
           ) : (
             <>
-              {/* Brand completa: Símbolo + Nome */}
+              {/* Logo Oficial Bempedi */}
               <Link
                 href="/dashboard"
-                className="flex items-center gap-2.5 no-underline group"
+                className="flex items-center no-underline group py-1"
               >
-                <div className="grid h-6 w-6 grid-cols-2 gap-[3px] transition-transform group-hover:scale-105">
-                  <div className="rounded-[2px] bg-zinc-900" />
-                  <div className="rounded-[2px] bg-amber-500" />
-                  <div className="rounded-[2px] bg-zinc-900" />
-                  <div className="rounded-[2px] bg-zinc-900" />
-                </div>
-                <span className="text-lg font-bold tracking-[-0.03em] text-zinc-900">
-                  kerokero
-                </span>
+                <Image
+                  src="/images/logo.png"
+                  alt="Bempedi"
+                  width={140}
+                  height={110}
+                  className="h-11 w-auto object-contain transition-transform group-hover:scale-105"
+                  priority
+                />
               </Link>
 
               {/* Botão de Recolher no Desktop */}

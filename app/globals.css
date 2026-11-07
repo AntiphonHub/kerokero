@@ -2,6 +2,10 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+html {
+    scroll-behavior: smooth;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -246,4 +250,3 @@ input:-webkit-autofill:focus {
   -webkit-box-shadow: 0 0 0px 1000px #ffffff inset, 0 0 0 3px rgba(245, 158, 11, 0.18) !important;
   box-shadow: 0 0 0px 1000px #ffffff inset, 0 0 0 3px rgba(245, 158, 11, 0.18) !important;
 }
-

@@ -11,7 +11,7 @@ import { CategorySalesChart } from '@/components/analytics/category-sales-chart'
 import { TopItemsRanking } from '@/components/analytics/top-items-ranking';
 
 export const metadata: Metadata = {
-  title: 'Métricas & Vendas | KeroKero',
+  title: 'Métricas & Vendas | Bempedi',
   description: 'Inteligência de negócio, canais de faturamento e desempenho de cardápio.',
 };
 

@@ -30,7 +30,7 @@ export function OrdersHistoryView({ initialData }: OrdersHistoryViewProps) {
           Histórico de Pedidos
         </h1>
         <p className="text-sm text-zinc-500 mt-0.5">
-          Conferência de caixa de comandas finalizadas e conciliação entre PIX Asaas e Maquininha.
+          Conferência de caixa de comandas finalizadas e conciliação entre PIX e Maquininha.
         </p>
       </div>
 

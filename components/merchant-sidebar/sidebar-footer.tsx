@@ -29,7 +29,7 @@ export function SidebarFooter({
     });
   };
 
-  const name = establishmentName || 'KeroKero Bar';
+  const name = establishmentName || 'Bempedi';
   const initials = getEstablishmentInitials(name);
   const formattedTables = formatTablesCount(tablesCount);
 

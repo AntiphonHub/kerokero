@@ -10,12 +10,16 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'KeroKero - Comanda Digital',
+  title: 'Bempedi - Comanda Digital',
   description: 'Comanda digital inteligente na mesa',
+  icons: {
+    icon: '/images/logo.png',
+    apple: '/images/logo.png',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'KeroKero',
+    title: 'Bempedi',
   },
 };
 

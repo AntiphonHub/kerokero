@@ -144,7 +144,7 @@ export function TablesTab({ establishment }: TablesTabProps) {
               <strong>Redução de mesas:</strong> Desativa as últimas mesas do mapa. O sistema bloqueia a redução se qualquer uma das mesas excedentes estiver ocupada ou com conta aberta.
             </li>
             <li>
-              O limite do plano padrão KeroKero contempla até <strong>100 mesas ativas</strong> simultaneamente.
+              O Bempedi contempla até <strong>100 mesas ativas</strong> simultaneamente por estabelecimento.
             </li>
           </ul>
         </div>

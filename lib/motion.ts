@@ -1,7 +1,7 @@
 import type { Variants } from 'motion/react';
 
 /**
- * Constantes e variantes de animação discretas e elegantes para o KeroKero
+ * Constantes e variantes de animação discretas e elegantes para o Bempedi
  * Mantendo o princípio Anti-AI Slop: sem exageros ou movimentos longos/pesados.
  */
 

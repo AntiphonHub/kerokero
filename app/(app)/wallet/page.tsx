@@ -5,7 +5,7 @@ import { getWalletDataAction, WalletData } from '@/actions/wallet';
 import { WalletView } from '@/components/wallet/wallet-view';
 
 export const metadata = {
-  title: 'Carteira & Saques | KeroKero',
+  title: 'Carteira & Saques | Bempedi',
   description: 'Consulte seu saldo PIX em tempo real e realize saques para sua conta bancária.',
 };
 

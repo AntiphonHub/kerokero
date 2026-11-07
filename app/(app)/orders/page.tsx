@@ -12,7 +12,7 @@ import {
 import { OrdersHistoryView } from '@/components/orders/orders-history-view';
 
 export const metadata: Metadata = {
-  title: 'Histórico de Pedidos | KeroKero',
+  title: 'Histórico de Pedidos | Bempedi',
   description: 'Auditoria e conferência de caixa de comandas e itens finalizados.',
 };
 

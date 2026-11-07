@@ -184,10 +184,10 @@ export async function cancelSubscriptionAction(): Promise<ActionResponse> {
       subscriptionStatus: 'canceled',
     });
 
-    return { success: true, message: 'Assinatura cancelada com sucesso.' };
+    return { success: true, message: 'Acesso cancelado com sucesso.' };
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : String(error);
-    return { success: false, message: msg || 'Erro ao cancelar assinatura.' };
+    return { success: false, message: msg || 'Erro ao cancelar acesso.' };
   }
 }
 
@@ -244,6 +244,7 @@ export async function deleteAccountAction(
     try {
       const cookieStore = await cookies();
       cookieStore.delete('a_session_' + (process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID || ''));
+      cookieStore.delete('bempedi_session');
       cookieStore.delete('kerokero_session');
     } catch {}
 

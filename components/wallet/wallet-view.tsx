@@ -150,10 +150,10 @@ export function WalletView({ initialData }: WalletViewProps) {
           </div>
 
           <div className="mt-6 pt-4 border-t border-zinc-100 space-y-1.5">
-            <div className="text-xs font-medium text-zinc-700">Subconta Asaas:</div>
+            <div className="text-xs font-medium text-zinc-700">Recebimento Digital:</div>
             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-zinc-100 text-zinc-800">
               <span className="h-2 w-2 rounded-full bg-emerald-500" />
-              Conectada e Pronta
+              Ativo e Pronto
             </div>
           </div>
         </div>
@@ -216,7 +216,7 @@ export function WalletView({ initialData }: WalletViewProps) {
               Histórico de Transferências & Saques
             </h2>
             <p className="text-xs text-zinc-500 mt-0.5">
-              Registro das transferências via PIX emitidas pela subconta do estabelecimento.
+              Registro das transferências via PIX emitidas pela sua conta.
             </p>
           </div>
           <span className="text-xs text-zinc-500 font-mono font-medium">

@@ -38,11 +38,11 @@ export function HistorySummaryCards({ summary }: HistorySummaryCardsProps) {
         </p>
       </div>
 
-      {/* 2. Recebido via PIX Asaas */}
+      {/* 2. Recebido via PIX */}
       <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs">
         <div className="flex items-center justify-between">
           <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
-            PIX Asaas (Digital)
+            PIX (Digital)
           </span>
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-100 text-zinc-700">
             <QrCode className="h-4 w-4" />
@@ -53,7 +53,7 @@ export function HistorySummaryCards({ summary }: HistorySummaryCardsProps) {
         </p>
         <div className="mt-1.5 flex items-center gap-1.5 text-xs text-zinc-500">
           <span className="font-semibold text-zinc-700">{pixPercentage}%</span>
-          <span>liquidado na subconta</span>
+          <span>liquidado via PIX</span>
         </div>
       </div>
 

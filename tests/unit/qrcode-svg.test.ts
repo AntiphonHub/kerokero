@@ -3,7 +3,7 @@ import { generateQrCodeSvg } from '@/lib/utils/qrcode-svg';
 
 describe('QR Code Vector SVG Generator', () => {
   it('generates a valid SVG string for a given URL', async () => {
-    const url = 'https://kerokero.app/m/abcdef1234567890abcdef1234567890abcdef1234567890';
+    const url = 'https://bempedi.com/m/abcdef1234567890abcdef1234567890abcdef1234567890';
     const svg = await generateQrCodeSvg(url, { color: { dark: '#121212', light: '#00000000' } });
 
     expect(typeof svg).toBe('string');
@@ -14,7 +14,7 @@ describe('QR Code Vector SVG Generator', () => {
   });
 
   it('handles custom margins and sizes', async () => {
-    const url = 'https://kerokero.app/m/test-token';
+    const url = 'https://bempedi.com/m/test-token';
     const svg = await generateQrCodeSvg(url, { margin: 1, width: 200 });
 
     expect(svg).toContain('<svg');

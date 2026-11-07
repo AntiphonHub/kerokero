@@ -4,7 +4,7 @@ import { SignupForm } from '@/components/auth/signup-form';
 export const instant = false;
 
 export const metadata: Metadata = {
-  title: 'Criar conta | KeroKero',
+  title: 'Criar conta | Bempedi',
   description: 'Preencha os campos para acessar sua comanda',
 };
 

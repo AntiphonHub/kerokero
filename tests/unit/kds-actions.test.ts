@@ -31,7 +31,7 @@ import {
 } from '@/actions/kds';
 
 describe('KDS Actions', () => {
-  const mockUser = { $id: 'user_123', email: 'chef@kerokero.com' };
+  const mockUser = { $id: 'user_123', email: 'chef@bempedi.com' };
   const mockEstablishment = {
     $id: 'est_123',
     userId: 'user_123',

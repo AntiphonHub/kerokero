@@ -5,8 +5,8 @@ import { SettingsView } from '@/components/settings/settings-view';
 import type { SettingsTabId } from '@/components/settings/settings-nav';
 
 export const metadata = {
-  title: 'Configurações | KeroKero',
-  description: 'Gerenciamento do restaurante, capacidade do salão, senhas e assinatura.',
+  title: 'Configurações | Bempedi',
+  description: 'Gerenciamento do restaurante, capacidade do salão, senhas e mensalidade.',
 };
 
 interface SettingsPageProps {

@@ -20,7 +20,7 @@ export async function createAsaasSubscription(
       value: input.value,
       nextDueDate: input.nextDueDate || formattedDate,
       cycle: input.cycle || 'MONTHLY',
-      description: input.description || 'Assinatura KeroKero',
+      description: input.description || 'Mensalidade Bempedi',
     }),
   });
 }

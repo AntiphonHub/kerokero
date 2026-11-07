@@ -18,7 +18,7 @@ const tabs: Array<{
   { id: 'store', label: 'Geral da Loja', icon: Store },
   { id: 'tables', label: 'Mesas & Salão', icon: LayoutGrid },
   { id: 'security', label: 'Segurança & Perfil', icon: ShieldCheck },
-  { id: 'subscription', label: 'Plano & Assinatura', icon: CreditCard },
+  { id: 'subscription', label: 'Mensalidade', icon: CreditCard },
   { id: 'danger', label: 'Zona de Perigo', icon: AlertTriangle, isDanger: true },
 ];
 

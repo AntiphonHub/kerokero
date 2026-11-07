@@ -5,7 +5,7 @@ import { listKitchenOrders } from '@/lib/appwrite/orders';
 import { KdsView } from '@/components/kds/kds-view';
 
 export const metadata = {
-  title: 'Cozinha & KDS | KeroKero',
+  title: 'Cozinha & KDS | Bempedi',
   description: 'Quadro Kanban de produção e pedidos em tempo real.',
 };
 

@@ -10,7 +10,7 @@ import { TopProductsChart } from '@/components/dashboard/top-products-chart';
 import { LiveServiceCalls } from '@/components/dashboard/live-service-calls';
 
 export const metadata: Metadata = {
-  title: 'Dashboard | KeroKero',
+  title: 'Dashboard | Bempedi',
   description: 'Painel operacional do lojista',
 };
 

@@ -31,7 +31,7 @@ describe('Wallet Server Actions', () => {
   const plainApiKey = '$aact_subaccount_real_key_123';
   const encryptedApiKey = encryptSecret(plainApiKey);
 
-  const mockUser = { $id: 'user_123', email: 'owner@kerokero.com' };
+  const mockUser = { $id: 'user_123', email: 'owner@bempedi.com' };
   const mockEstablishment = {
     $id: 'est_123',
     userId: 'user_123',
@@ -118,7 +118,7 @@ describe('Wallet Server Actions', () => {
       expect(mockCreateSubaccountTransfer).toHaveBeenCalledWith(plainApiKey, {
         value: 200.0,
         pixAddressKey: '48192837000106',
-        description: 'Saque KeroKero - Burger & Co',
+        description: 'Saque Bempedi - Burger & Co',
       });
     });
 
@@ -143,7 +143,7 @@ describe('Wallet Server Actions', () => {
         value: 150.0,
         pixAddressKey: 'financeiro@burger.com',
         pixAddressKeyType: 'EMAIL',
-        description: 'Saque KeroKero - Burger & Co',
+        description: 'Saque Bempedi - Burger & Co',
       });
       expect(mockUpdateEstablishmentBankPixKey).toHaveBeenCalledWith(
         'est_123',

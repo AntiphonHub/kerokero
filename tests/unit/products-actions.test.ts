@@ -37,7 +37,7 @@ import {
 } from '@/lib/appwrite/products';
 
 describe('Products Server Actions', () => {
-  const mockUser = { $id: 'user_123', email: 'test@kerokero.app' };
+  const mockUser = { $id: 'user_123', email: 'test@bempedi.com' };
   const mockEstablishment = { $id: 'est_123', userId: 'user_123' };
 
   beforeEach(() => {

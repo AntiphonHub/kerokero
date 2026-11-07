@@ -65,10 +65,10 @@ export function DangerTab({ establishment }: DangerTabProps) {
 
         <div className="space-y-3 text-xs text-zinc-600">
           <p className="leading-relaxed">
-            Ao encerrar a sua conta no KeroKero:
+            Ao encerrar a sua conta no Bempedi:
           </p>
           <ul className="list-disc pl-5 space-y-1.5 text-zinc-700">
-            <li>Sua assinatura recorrente no Asaas será <strong>cancelada imediatamente</strong> sem gerar novas cobranças.</li>
+            <li>Sua mensalidade será <strong>cancelada imediatamente</strong> sem gerar novas cobranças.</li>
             <li>O acesso de garçons e da cozinha ao KDS será <strong>bloqueado</strong>.</li>
             <li>Os QR Codes das mesas serão desativados permanentemente.</li>
             <li>Não será possível desfazer esta operação após a confirmação.</li>
@@ -104,7 +104,7 @@ export function DangerTab({ establishment }: DangerTabProps) {
               ) : (
                 <>
                   <Trash2 className="h-4 w-4" />
-                  <span>Excluir Estabelecimento & Cancelar Plano</span>
+                  <span>Excluir Estabelecimento & Encerrar Acesso</span>
                 </>
               )}
             </button>

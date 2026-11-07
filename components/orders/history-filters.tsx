@@ -21,7 +21,7 @@ const ranges: Array<{ id: HistoryRange; label: string }> = [
 
 const paymentMethods: Array<{ id: HistoryPaymentFilter; label: string }> = [
   { id: 'all', label: 'Todos os Meios' },
-  { id: 'pix_asaas', label: 'PIX Asaas' },
+  { id: 'pix_asaas', label: 'PIX' },
   { id: 'pos_card', label: 'Maquininha' },
   { id: 'cash', label: 'Dinheiro' },
 ];

@@ -1,12 +1,12 @@
 /**
  * Retorna as 2 primeiras iniciais de um estabelecimento comercial.
- * Exemplo: "My Bar" -> "MB", "KeroKero" -> "KE", "Café & Bistrô" -> "CB"
+ * Exemplo: "My Bar" -> "MB", "Bempedi" -> "BE", "Café & Bistrô" -> "CB"
  */
 export function getEstablishmentInitials(name?: string | null): string {
-  if (!name) return 'KK';
+  if (!name) return 'BE';
 
   const trimmed = name.trim();
-  if (!trimmed) return 'KK';
+  if (!trimmed) return 'BE';
 
   // Extrai palavras contendo caracteres alfanuméricos (incluindo acentuados)
   const words = trimmed
@@ -14,7 +14,7 @@ export function getEstablishmentInitials(name?: string | null): string {
     .map((w) => w.replace(/[^a-zA-Z0-9À-ÿ]/g, ''))
     .filter((w) => w.length > 0);
 
-  if (words.length === 0) return 'KK';
+  if (words.length === 0) return 'BE';
 
   if (words.length === 1) {
     const single = words[0];

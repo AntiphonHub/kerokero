@@ -85,7 +85,7 @@ describe('Asaas Transfers & Balance Service', () => {
       const res = await createSubaccountTransfer(mockSubaccountApiKey, {
         value: 250.0,
         pixAddressKey: '48192837000106',
-        description: 'Saque KeroKero',
+        description: 'Saque Bempedi',
       });
 
       expect(res.id).toBe('tra_999888');
@@ -101,7 +101,7 @@ describe('Asaas Transfers & Balance Service', () => {
             value: 250.0,
             operationType: 'PIX',
             pixAddressKey: '48192837000106',
-            description: 'Saque KeroKero',
+            description: 'Saque Bempedi',
           }),
         }),
       );

@@ -200,10 +200,10 @@ export async function submitSubaccountAction(
     }
 
     // 3. Integração com Asaas (Customer + Subscription + Subaccount)
-    const emailToUse = user.email || 'contato@kerokero.app';
+    const emailToUse = user.email || 'contato@bempedi.app';
     const cnpjToUse = establishment.cnpj || '';
 
-    // 3a. Cria ou recupera cliente no Asaas para cobrança da assinatura KeroKero
+    // 3a. Cria ou recupera cliente no Asaas para cobrança da assinatura Bempedi
     let customerId = establishment.asaasCustomerId;
     if (!customerId) {
       const customer = await createOrGetAsaasCustomer({
@@ -223,7 +223,7 @@ export async function submitSubaccountAction(
       const subscription = await createAsaasSubscription({
         customerId,
         value: 149.0,
-        description: 'Assinatura KeroKero Pro - Autoatendimento Inteligente',
+        description: 'Mensalidade Bempedi - Sistema de Comandas Digitais',
       });
       subscriptionId = subscription.id;
     }

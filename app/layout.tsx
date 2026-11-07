@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { createNextServerHelpers } from '@appwrite.io/react/server/next';
 import { Providers } from './providers';
+import { SEO_METADATA, SITE_URL } from '@/lib/seo/config';
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta-sans",
@@ -16,8 +17,39 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "KeroKero",
-  description: "Comanda digital inteligente na mesa",
+  metadataBase: new URL(SITE_URL),
+  title: SEO_METADATA.title,
+  description: SEO_METADATA.description,
+  keywords: SEO_METADATA.keywords,
+  authors: SEO_METADATA.authors,
+  creator: SEO_METADATA.creator,
+  publisher: SEO_METADATA.publisher,
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: SEO_METADATA.openGraph,
+  twitter: SEO_METADATA.twitter,
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  icons: {
+    icon: [
+      { url: '/images/logo.png', type: 'image/png' },
+    ],
+    shortcut: '/images/logo.png',
+    apple: '/images/logo.png',
+  },
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+  },
 };
 
 const appwrite = {

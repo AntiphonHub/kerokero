@@ -8,7 +8,7 @@ interface OnboardingStepperProps {
 const steps = [
   { step: 1, label: 'Dados da Loja' },
   { step: 2, label: 'Operação & Mesas' },
-  { step: 3, label: 'Subconta Bancária' },
+  { step: 3, label: 'Conta Bancária' },
 ] as const;
 
 export function OnboardingStepper({ currentStep }: OnboardingStepperProps) {

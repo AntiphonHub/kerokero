@@ -225,7 +225,7 @@ describe('Client PWA Orders & PIX End-to-End Integration Flow', () => {
     // Seed: Estabelecimento com subconta Asaas e geolocalização
     inMemoryDb.seed(appwriteConfig.collections.establishments, {
       $id: establishmentId,
-      name: 'Restaurante KeroKero Central',
+      name: 'Restaurante Bempedi Central',
       latitude: establishmentCoords.latitude,
       longitude: establishmentCoords.longitude,
       asaasSubaccountApiKey: 'subaccount_api_key_live_mock',
@@ -265,7 +265,7 @@ describe('Client PWA Orders & PIX End-to-End Integration Flow', () => {
       tableId,
       tableNumber,
       establishmentId,
-      establishmentName: 'Restaurante KeroKero Central',
+      establishmentName: 'Restaurante Bempedi Central',
     });
 
     // -------------------------------------------------------------------------
