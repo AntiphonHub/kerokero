@@ -26,12 +26,14 @@ describe('Landing Hero Data & Helpers', () => {
     expect(emojiRegex.test(HERO_CONTENT.headline)).toBe(false);
     expect(emojiRegex.test(HERO_CONTENT.subheadline)).toBe(false);
     expect(emojiRegex.test(HERO_CONTENT.primaryCta.label)).toBe(false);
+    expect(emojiRegex.test(HERO_CONTENT.socialProof.label)).toBe(false);
+    expect(HERO_CONTENT.socialProof.count).toBe('+ de 70');
   });
 
   it('returns correct CTA depending on session presence', () => {
     const guestCta = getHeroCta(false);
     expect(guestCta.label).toBe('Começar Agora');
-    expect(guestCta.href).toBe('/signup');
+    expect(guestCta.href).toBe('/cadastro');
 
     const authCta = getHeroCta(true);
     expect(authCta.label).toBe('Acessar Painel');

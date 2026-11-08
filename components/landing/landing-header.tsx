@@ -91,7 +91,7 @@ export function LandingHeader({ hasSession }: LandingHeaderProps) {
                 Entrar
               </Link>
               <Link
-                href="/signup"
+                href="/cadastro"
                 className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-amber-500 hover:bg-amber-400 text-black shadow-md shadow-amber-500/20 transition-all"
               >
                 <span>Criar Conta</span>

@@ -27,7 +27,7 @@ export function MockupMac() {
   ];
 
   return (
-    <div className="w-full max-w-5xl mx-auto rounded-2xl bg-neutral-900 shadow-2xl shadow-black/90 border border-neutral-700/60 overflow-hidden select-none text-left">
+    <div className="w-full max-w-5xl mx-auto rounded-2xl bg-neutral-900 shadow-2xl shadow-black/90 border border-neutral-700/60 overflow-hidden select-none text-left h-[540px] sm:h-[600px] lg:h-auto">
       {/* Mac Window Chrome Bar */}
       <div className="flex items-center justify-between px-4 py-3 bg-[#1e1e24] border-b border-neutral-800">
         <div className="flex items-center gap-2">
@@ -50,7 +50,7 @@ export function MockupMac() {
       </div>
 
       {/* Real App Container: bg-[#F4F4F5] (1:1 with app/(app)/layout.tsx) */}
-      <div className="flex bg-[#F4F4F5] text-zinc-900 min-h-[580px]">
+      <div className="flex bg-[#F4F4F5] text-zinc-900 min-h-[540px] sm:min-h-[580px] h-full lg:h-auto">
         {/* Real App Floating Sidebar (1:1 with components/merchant-sidebar/sidebar.tsx) */}
         <aside className="w-60 bg-white border border-zinc-200/80 rounded-2xl shadow-xs my-3 ml-3 p-3 hidden md:flex flex-col justify-between shrink-0">
           <div className="space-y-3">

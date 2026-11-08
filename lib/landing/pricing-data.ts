@@ -24,7 +24,7 @@ export const PRICING_DATA = {
   ],
   cta: {
     label: 'Começar Agora',
-    href: '/signup',
+    href: '/cadastro',
     authLabel: 'Acessar Painel',
     authHref: '/dashboard',
   },

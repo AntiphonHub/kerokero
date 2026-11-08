@@ -17,7 +17,7 @@ describe('Landing Final CTA & Footer Data', () => {
   it('provides correct CTA depending on user authentication status', () => {
     const guestCta = getFinalCtaAction(false);
     expect(guestCta.label).toBe('Criar Conta Agora');
-    expect(guestCta.href).toBe('/signup');
+    expect(guestCta.href).toBe('/cadastro');
 
     const authCta = getFinalCtaAction(true);
     expect(authCta.label).toBe('Acessar Painel');

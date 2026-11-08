@@ -30,7 +30,7 @@ export const FINAL_CTA_DATA: FinalCtaConfig = {
   subheadline: 'Comece hoje mesmo a transformar o atendimento da sua operação. Ativação em menos de 10 minutos, sem contratos de fidelidade e sem taxa de adesão.',
   primaryButton: {
     label: 'Criar Conta Agora',
-    href: '/signup',
+    href: '/cadastro',
   },
   secondaryButton: {
     label: 'Entrar na Plataforma',
@@ -54,7 +54,7 @@ export const FOOTER_DATA: FooterConfig = {
     { label: 'Demonstração', href: '#demonstracao' },
     { label: 'Preço', href: '#preco' },
     { label: 'Entrar', href: '/login' },
-    { label: 'Criar Conta', href: '/signup' },
+    { label: 'Criar Conta', href: '/cadastro' },
   ],
 };
 
@@ -68,6 +68,6 @@ export function getFinalCtaAction(hasSession: boolean): FinalCtaAction {
 
   return {
     label: 'Criar Conta Agora',
-    href: '/signup',
+    href: '/cadastro',
   };
 }

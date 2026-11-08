@@ -23,7 +23,9 @@ export function proxy(request: NextRequest) {
     pathname === '/login' ||
     pathname.startsWith('/login/') ||
     pathname === '/cadastro' ||
-    pathname.startsWith('/cadastro/');
+    pathname.startsWith('/cadastro/') ||
+    pathname === '/signup' ||
+    pathname.startsWith('/signup/');
 
   const isAppRoute =
     pathname === '/dashboard' ||

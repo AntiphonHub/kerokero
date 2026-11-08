@@ -1,7 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Star } from 'lucide-react';
 import { HERO_CONTENT, getHeroCta } from '@/lib/landing/hero-data';
 import { MockupMac } from './mockup-mac';
 import { MockupIPhone } from './mockup-iphone';
@@ -68,6 +68,14 @@ export function HeroSection({ hasSession }: HeroSectionProps) {
             <span>{HERO_CONTENT.secondaryCta.label}</span>
           </Link>
         </div>
+
+        {/* Prova Social: + de 70 estabelecimentos satisfeitos */}
+        <div className="mt-4 flex items-center justify-center gap-2 text-xs sm:text-sm text-neutral-300 font-medium">
+          <span>
+            <strong className="text-white font-semibold">{HERO_CONTENT.socialProof.count}</strong>{' '}
+            {HERO_CONTENT.socialProof.label}
+          </span>
+        </div>
       </div>
 
       {/* 4. Mockups: Subidos para revelar mais conteúdo na 1ª tela sem apertar */}
@@ -81,7 +89,7 @@ export function HeroSection({ hasSession }: HeroSectionProps) {
         </div>
 
         {/* Mockup do iPhone Sobreposto em Primeiro Plano */}
-        <div className="absolute -right-2 sm:right-2 lg:right-6 top-8 sm:top-12 z-20 transform scale-[0.80] sm:scale-92 lg:scale-100 origin-top-right drop-shadow-[0_25px_35px_rgba(0,0,0,0.7)]">
+        <div className="absolute -right-2 sm:right-2 lg:right-6 top-3 sm:top-8 lg:top-12 z-20 transform scale-[0.80] sm:scale-92 lg:scale-100 origin-top-right drop-shadow-[0_25px_35px_rgba(0,0,0,0.7)]">
           <MockupIPhone />
         </div>
       </div>

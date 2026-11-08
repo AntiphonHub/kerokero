@@ -85,7 +85,7 @@ export function SubscriptionTab({ establishment }: SubscriptionTabProps) {
               <h4 className="text-base font-bold text-zinc-900 mt-0.5">Acesso Bempedi</h4>
             </div>
             <div className="sm:text-right">
-              <span className="text-xl font-extrabold text-zinc-900">R$ 99,00</span>
+              <span className="text-xl font-extrabold text-zinc-900">R$ 149,00</span>
               <span className="text-xs font-medium text-zinc-500"> / mês</span>
             </div>
           </div>

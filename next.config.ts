@@ -18,6 +18,15 @@ const nextConfig: NextConfig = {
   },
   cacheComponents: true,
   partialPrefetching: true,
+  async redirects() {
+    return [
+      {
+        source: '/signup',
+        destination: '/cadastro',
+        permanent: true,
+      },
+    ];
+  },
   turbopack: {
     rules: {
       "*.css": {

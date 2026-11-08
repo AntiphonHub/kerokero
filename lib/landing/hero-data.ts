@@ -23,13 +23,17 @@ export const HERO_CONTENT = {
     'Seus clientes pedem e pagam via QR Code na mesa em segundos. Pedidos direto na cozinha, sem filas para pagar e com controle total em tempo real no seu painel.',
   primaryCta: {
     label: 'Começar Agora',
-    href: '/signup',
+    href: '/cadastro',
     authLabel: 'Acessar Painel',
     authHref: '/dashboard',
   },
   secondaryCta: {
     label: 'Ver Demonstração',
     href: '#demonstracao',
+  },
+  socialProof: {
+    count: '+ de 70',
+    label: 'estabelecimentos satisfeitos',
   },
   highlights: [
     'Sem maquininha travando o salão',

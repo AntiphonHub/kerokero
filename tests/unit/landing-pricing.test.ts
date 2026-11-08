@@ -33,7 +33,7 @@ describe('Landing Pricing Data & Helpers', () => {
 
   it('has direct CTA leading to registration', () => {
     expect(PRICING_DATA.cta.label).toBeDefined();
-    expect(PRICING_DATA.cta.href).toBe('/signup');
+    expect(PRICING_DATA.cta.href).toBe('/cadastro');
     expect(PRICING_DATA.cta.authHref).toBe('/dashboard');
   });
 });
