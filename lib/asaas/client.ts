@@ -14,6 +14,11 @@ export function sanitizeAsaasApiKey(rawKey?: string | null): string {
     key = key.substring(1);
   }
 
+  // Remove duplo cifrão do Docker Compose (ex: $$aact_...)
+  while (key.startsWith('$$')) {
+    key = key.substring(1);
+  }
+
   // Se o Next.js / shell engoliu o '$' inicial por interpolação de variáveis e sobrou 'aact_...'
   if (key.startsWith('aact_')) {
     key = `$${key}`;

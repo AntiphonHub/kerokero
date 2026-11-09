@@ -1,3 +1,4 @@
+import { connection } from 'next/server';
 import { getSession } from '@/lib/appwrite/session';
 import { LandingHeader } from '@/components/landing/landing-header';
 import { HeroSection } from '@/components/landing/hero-section';
@@ -10,6 +11,7 @@ import { generateSoftwareStructuredData } from '@/lib/seo/config';
 export const instant = false;
 
 export default async function HomePage() {
+  await connection();
   const session = await getSession();
   const hasSession = Boolean(session);
   const structuredData = generateSoftwareStructuredData();

@@ -28,6 +28,8 @@ vi.mock('@/lib/asaas/customers', () => ({
 
 vi.mock('@/lib/asaas/subscriptions', () => ({
   createAsaasSubscription: vi.fn(),
+  createOrGetAsaasSubscription: vi.fn(),
+  cancelAsaasSubscription: vi.fn(),
   getAsaasSubscriptionPix: vi.fn(),
 }));
 
@@ -48,7 +50,7 @@ import {
   saveSubaccountAndActivate,
 } from '@/lib/appwrite/establishments';
 import { createAsaasCustomer, createOrGetAsaasCustomer } from '@/lib/asaas/customers';
-import { createAsaasSubscription } from '@/lib/asaas/subscriptions';
+import { createAsaasSubscription, createOrGetAsaasSubscription } from '@/lib/asaas/subscriptions';
 import { createAsaasSubaccount } from '@/lib/asaas/subaccounts';
 import { decryptSecret } from '@/lib/security/encryption';
 
@@ -161,7 +163,7 @@ describe('Onboarding Server Actions', () => {
       vi.mocked(createOrGetAsaasCustomer).mockResolvedValueOnce({
         id: 'cus_test_123',
       } as any);
-      vi.mocked(createAsaasSubscription).mockResolvedValueOnce({
+      vi.mocked(createOrGetAsaasSubscription).mockResolvedValueOnce({
         id: 'sub_test_456',
         status: 'ACTIVE',
       } as any);
@@ -196,7 +198,7 @@ describe('Onboarding Server Actions', () => {
       expect(res.success).toBe(true);
       expect(res.nextStep).toBe('/onboarding/conclusao');
       expect(createOrGetAsaasCustomer).toHaveBeenCalled();
-      expect(createAsaasSubscription).toHaveBeenCalled();
+      expect(createOrGetAsaasSubscription).toHaveBeenCalled();
       expect(createAsaasSubaccount).toHaveBeenCalled();
       expect(saveSubaccountAndActivate).toHaveBeenCalledWith(
         'est_123',
@@ -231,7 +233,7 @@ describe('Onboarding Server Actions', () => {
       } as any);
 
       vi.mocked(createOrGetAsaasCustomer).mockResolvedValueOnce({ id: 'cus_test_123' } as any);
-      vi.mocked(createAsaasSubscription).mockResolvedValueOnce({ id: 'sub_test_456' } as any);
+      vi.mocked(createOrGetAsaasSubscription).mockResolvedValueOnce({ id: 'sub_test_456' } as any);
       vi.mocked(createAsaasSubaccount).mockResolvedValueOnce({
         id: 'act_test_789',
         walletId: 'wal_test_000',
@@ -254,6 +256,41 @@ describe('Onboarding Server Actions', () => {
       expect(res.nextStep).toBe('/onboarding/conclusao');
       expect(createAsaasSubaccount).toHaveBeenCalled();
       expect(saveSubaccountAndActivate).toHaveBeenCalled();
+    });
+
+    it('should NOT create subscription if createAsaasSubaccount fails', async () => {
+      vi.mocked(getLoggedInUser).mockResolvedValueOnce({
+        $id: 'user_123',
+        email: 'dono@keroburguer.com',
+      } as any);
+      vi.mocked(getEstablishmentByUserId).mockResolvedValueOnce({
+        $id: 'est_123',
+        name: 'Kero Burguer',
+        legalName: 'Kero Burguer LTDA',
+        cnpj: '48192837000106',
+        phone: '11987654321',
+        postalCode: '01414001',
+        address: 'Rua Bela Cintra',
+      } as any);
+
+      vi.mocked(createOrGetAsaasCustomer).mockResolvedValueOnce({ id: 'cus_test_123' } as any);
+      vi.mocked(createAsaasSubaccount).mockRejectedValueOnce(new Error('CNPJ inválido no Asaas'));
+
+      const formData = new FormData();
+      formData.set('repName', 'Carlos Eduardo');
+      formData.set('repCpf', '529.982.247-25');
+      formData.set('repBirthDate', '1988-06-14');
+      formData.set('bankCode', '341');
+      formData.set('bankPixKey', '48192837000106');
+      formData.set('bankAgency', '0842');
+      formData.set('bankAccount', '48291-7');
+
+      const res = await submitSubaccountAction({}, formData);
+
+      expect(res.success).toBeFalsy();
+      expect(res.message).toContain('CNPJ inválido no Asaas');
+      expect(createOrGetAsaasSubscription).not.toHaveBeenCalled();
+      expect(saveSubaccountAndActivate).not.toHaveBeenCalled();
     });
   });
 

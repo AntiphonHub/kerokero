@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { createNextServerHelpers } from '@appwrite.io/react/server/next';
+import { getSession } from '@/lib/appwrite/session';
 import { Providers } from './providers';
 import { SEO_METADATA, SITE_URL } from '@/lib/seo/config';
 
@@ -52,11 +52,6 @@ export const metadata: Metadata = {
   },
 };
 
-const appwrite = {
-  endpoint: process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || '',
-  projectId: process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID || ''
-};
-
 export const instant = false;
 
 export default async function RootLayout({
@@ -64,11 +59,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  let session = null;
-  if (appwrite.endpoint && appwrite.projectId) {
-    const helpers = createNextServerHelpers(appwrite);
-    session = await helpers.readSessionCookie();
-  }
+  const session = await getSession();
 
   return (
     <html

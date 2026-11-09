@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import { connection } from 'next/server';
 import { getSession } from '@/lib/appwrite/session';
 import { Brand } from '@/components/brand';
 import { AuthShowcase } from '@/components/auth/auth-showcase';
@@ -10,6 +11,7 @@ export default async function AuthLayout({
 }: {
   children: React.ReactNode;
 }) {
+  await connection();
   const session = await getSession();
   if (session) {
     redirect('/dashboard');

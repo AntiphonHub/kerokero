@@ -62,6 +62,29 @@ export async function getAsaasSubscriptionPayments(
 }
 
 
+export async function findActiveAsaasSubscription(
+  customerId: string,
+): Promise<AsaasSubscription | null> {
+  try {
+    const res = await asaasRequest<{ data: AsaasSubscription[] }>(
+      `/subscriptions?customer=${customerId}&status=ACTIVE&limit=1`,
+    );
+    return res.data?.[0] || null;
+  } catch {
+    return null;
+  }
+}
+
+export async function createOrGetAsaasSubscription(
+  input: AsaasSubscriptionInput,
+): Promise<AsaasSubscription> {
+  const existing = await findActiveAsaasSubscription(input.customerId);
+  if (existing) {
+    return existing;
+  }
+  return createAsaasSubscription(input);
+}
+
 export async function cancelAsaasSubscription(subscriptionId: string): Promise<boolean> {
   await asaasRequest(`/subscriptions/${subscriptionId}`, {
     method: 'DELETE',

@@ -19,6 +19,8 @@ import {
 } from '@/lib/asaas/customers';
 import {
   createAsaasSubscription,
+  createOrGetAsaasSubscription,
+  cancelAsaasSubscription,
   getAsaasSubscriptionPix,
   getAsaasSubscriptionPayments,
 } from '@/lib/asaas/subscriptions';
@@ -190,7 +192,7 @@ export async function submitSubaccountAction(
       return { errors: parsed.error.flatten().fieldErrors };
     }
 
-    // 3. Integração com Asaas (Customer + Subscription + Subaccount)
+    // 3. Integração com Asaas (Customer + Subaccount + Subscription)
     const emailToUse = user.email || 'contato@bempedi.app';
     const cnpjToUse = establishment.cnpj || '';
 
@@ -208,18 +210,9 @@ export async function submitSubaccountAction(
       customerId = customer.id;
     }
 
-    // 3b. Cria ou recupera a assinatura mensal do SaaS
-    let subscriptionId = establishment.asaasSubscriptionId;
-    if (!subscriptionId) {
-      const subscription = await createAsaasSubscription({
-        customerId,
-        value: 149.0,
-        description: 'Mensalidade Bempedi - Sistema de Comandas Digitais',
-      });
-      subscriptionId = subscription.id;
-    }
-
-    // 3c. Cria ou recupera a subconta do estabelecimento para recebimento das comandas
+    // 3b. Cria ou recupera a subconta do estabelecimento PRIMEIRO
+    // Isso garante que se a criação da subconta falhar por qualquer motivo (CNPJ, endereço, etc.),
+    // nenhuma assinatura terá sido criada previamente no Asaas.
     let subaccountId = establishment.asaasSubaccountId;
     let walletId = establishment.asaasWalletId;
     let subaccountApiKey = establishment.asaasSubaccountApiKey;
@@ -242,32 +235,57 @@ export async function submitSubaccountAction(
       subaccountApiKey = encryptSecret(subaccountApiKey);
     }
 
+    // 3c. Cria ou recupera a assinatura mensal do SaaS apenas após sucesso da subconta
+    let subscriptionId = establishment.asaasSubscriptionId;
+    let newlyCreatedSubscriptionId: string | null = null;
+
+    if (!subscriptionId) {
+      const subscription = await createOrGetAsaasSubscription({
+        customerId,
+        value: 149.0,
+        description: 'Mensalidade Bempedi - Sistema de Comandas Digitais',
+      });
+      subscriptionId = subscription.id;
+      newlyCreatedSubscriptionId = subscription.id;
+    }
+
     // 4. Salva no Appwrite ativando o onboarding com 7 dias de período de teste gratuito (Free Trial)
     const now = Date.now();
     const trialStartDate = new Date(now).toISOString();
     const trialEndsAt = new Date(now + 7 * 24 * 60 * 60 * 1000).toISOString();
 
-    await saveSubaccountAndActivate(establishment.$id, {
-      subaccount: parsed.data,
-      asaas: {
-        customerId,
-        subscriptionId,
-        subaccountId,
-        walletId: walletId || '',
-        subaccountApiKey: subaccountApiKey || '',
-      },
-      subscriptionStatus: 'trialing',
-      trialStartDate,
-      trialEndsAt,
-    });
+    try {
+      await saveSubaccountAndActivate(establishment.$id, {
+        subaccount: parsed.data,
+        asaas: {
+          customerId,
+          subscriptionId,
+          subaccountId,
+          walletId: walletId || '',
+          subaccountApiKey: subaccountApiKey || '',
+        },
+        subscriptionStatus: 'trialing',
+        trialStartDate,
+        trialEndsAt,
+      });
 
-    // 5. Provisiona antecipadamente as mesas com seus tokens de QR Code
-    if (establishment.tablesCount) {
-      try {
-        await ensureEstablishmentTables(establishment.$id, establishment.tablesCount);
-      } catch (tableErr) {
-        console.warn('[Onboarding] Aviso: falha ao pré-provisionar mesas:', tableErr);
+      // 5. Provisiona antecipadamente as mesas com seus tokens de QR Code
+      if (establishment.tablesCount) {
+        try {
+          await ensureEstablishmentTables(establishment.$id, establishment.tablesCount);
+        } catch (tableErr) {
+          console.warn('[Onboarding] Aviso: falha ao pré-provisionar mesas:', tableErr);
+        }
       }
+    } catch (saveError) {
+      // Se falhar ao salvar no Appwrite e uma nova assinatura tiver sido criada nesta execução,
+      // cancela a assinatura no Asaas para evitar cobrança de conta não ativada
+      if (newlyCreatedSubscriptionId) {
+        await cancelAsaasSubscription(newlyCreatedSubscriptionId).catch((cancelErr) => {
+          console.error('[Onboarding Rollback] Falha ao cancelar assinatura após erro no Appwrite:', cancelErr);
+        });
+      }
+      throw saveError;
     }
 
     return {

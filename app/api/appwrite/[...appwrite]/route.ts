@@ -1,8 +1,14 @@
 import { createAppwriteHandlers } from '@appwrite.io/react/handlers/next';
 
-const isProduction = process.env.NODE_ENV === 'production';
 // 1 ano (365 dias) de permanência para o cookie de sessão do lojista
 const ONE_YEAR_IN_SECONDS = 60 * 60 * 24 * 365;
+
+const isHttps =
+  process.env.COOKIE_SECURE !== undefined
+    ? process.env.COOKIE_SECURE === 'true'
+    : process.env.NEXT_PUBLIC_SITE_URL
+      ? process.env.NEXT_PUBLIC_SITE_URL.startsWith('https://')
+      : process.env.NODE_ENV === 'production';
 
 export const { GET, POST } = createAppwriteHandlers({
   endpoint: process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1',
@@ -13,7 +19,7 @@ export const { GET, POST } = createAppwriteHandlers({
     path: '/',
     httpOnly: true,
     sameSite: 'lax',
-    secure: isProduction,
+    secure: isHttps,
     maxAge: ONE_YEAR_IN_SECONDS,
   },
 });

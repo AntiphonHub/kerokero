@@ -159,6 +159,10 @@ describe('Asaas Services', () => {
       expect(sanitizeAsaasApiKey('\\$aact_valid_key')).toBe('$aact_valid_key');
     });
 
+    it('should remove double dollar sign from docker compose escape', () => {
+      expect(sanitizeAsaasApiKey('$$aact_valid_key')).toBe('$aact_valid_key');
+    });
+
     it('should prepend $ if swallowed by environment variable interpolation', () => {
       expect(sanitizeAsaasApiKey('aact_valid_key')).toBe('$aact_valid_key');
     });
