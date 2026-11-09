@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { sanitizeAsaasApiKey, asaasRequest } from '@/lib/asaas/client';
 import { createAsaasCustomer } from '@/lib/asaas/customers';
 import { createAsaasSubscription, getAsaasSubscriptionPix } from '@/lib/asaas/subscriptions';
 import { createAsaasSubaccount } from '@/lib/asaas/subaccounts';
@@ -145,6 +146,28 @@ describe('Asaas Services', () => {
 
       expect(subaccount.id).toBe('act_0001122');
       expect(subaccount.walletId).toBe('wal_778899');
+    });
+  });
+
+  describe('sanitizeAsaasApiKey & client security', () => {
+    it('should sanitize raw key with surrounding quotes', () => {
+      expect(sanitizeAsaasApiKey('"$aact_valid_key"')).toBe('$aact_valid_key');
+      expect(sanitizeAsaasApiKey("'$aact_valid_key'")).toBe('$aact_valid_key');
+    });
+
+    it('should remove escaped backslashes', () => {
+      expect(sanitizeAsaasApiKey('\\$aact_valid_key')).toBe('$aact_valid_key');
+    });
+
+    it('should prepend $ if swallowed by environment variable interpolation', () => {
+      expect(sanitizeAsaasApiKey('aact_valid_key')).toBe('$aact_valid_key');
+    });
+
+    it('should throw clear error when ASAAS_API_KEY is missing', async () => {
+      vi.stubEnv('ASAAS_API_KEY', '');
+      await expect(asaasRequest('/customers')).rejects.toThrow(
+        'Chave de API do Asaas não configurada',
+      );
     });
   });
 });

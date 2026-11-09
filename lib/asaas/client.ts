@@ -2,12 +2,32 @@ import fs from 'fs';
 import path from 'path';
 import { AsaasErrorResponse } from './types';
 
-export function getAsaasConfig() {
-  const apiUrl = process.env.ASAAS_API_URL || 'https://sandbox.asaas.com/api/v3';
-  let apiKey = process.env.ASAAS_API_KEY || '';
+export function sanitizeAsaasApiKey(rawKey?: string | null): string {
+  if (!rawKey) return '';
+  let key = rawKey.trim();
 
-  // Fallback se o Next.js / dotenv-expand engoliu o '$' da chave
-  if (!apiKey && typeof process !== 'undefined') {
+  // Remove aspas duplas ou simples ao redor da chave (comum em dashboards e envs)
+  key = key.replace(/^["']|["']$/g, '').trim();
+
+  // Remove escapes de barra invertida (ex: \$aact_...)
+  while (key.startsWith('\\$')) {
+    key = key.substring(1);
+  }
+
+  // Se o Next.js / shell engoliu o '$' inicial por interpolação de variáveis e sobrou 'aact_...'
+  if (key.startsWith('aact_')) {
+    key = `$${key}`;
+  }
+
+  return key;
+}
+
+export function getAsaasConfig() {
+  const apiUrl = (process.env.ASAAS_API_URL || 'https://sandbox.asaas.com/api/v3').trim();
+  let apiKey = sanitizeAsaasApiKey(process.env.ASAAS_API_KEY);
+
+  // Fallback em desenvolvimento local se o Next.js / dotenv engoliu a chave
+  if (!apiKey && process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
     try {
       const envPath = path.resolve(process.cwd(), '.env.local');
       if (fs.existsSync(envPath)) {
@@ -16,7 +36,7 @@ export function getAsaasConfig() {
           const trimmed = line.trim();
           if (trimmed.startsWith('ASAAS_API_KEY=')) {
             const raw = trimmed.replace(/^ASAAS_API_KEY=/, '').trim();
-            apiKey = raw.replace(/^["']|["']$/g, '');
+            apiKey = sanitizeAsaasApiKey(raw);
             break;
           }
         }
@@ -24,10 +44,6 @@ export function getAsaasConfig() {
     } catch {
       // ignore
     }
-  }
-
-  if (apiKey.startsWith('\\$')) {
-    apiKey = apiKey.substring(1);
   }
 
   return {
@@ -44,10 +60,20 @@ export async function asaasRequest<T>(
   const url = `${apiUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
 
   const customHeaders = (options.headers as Record<string, string> | undefined) || {};
+  const tokenToUse = customHeaders.access_token
+    ? sanitizeAsaasApiKey(customHeaders.access_token)
+    : apiKey;
+
+  if (!tokenToUse) {
+    throw new Error(
+      'Chave de API do Asaas não configurada (ASAAS_API_KEY ausente). Configure a variável de ambiente nas configurações do seu projeto.',
+    );
+  }
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...(apiKey ? { access_token: apiKey } : {}),
     ...customHeaders,
+    access_token: tokenToUse,
   };
 
   const res = await fetch(url, {
@@ -62,6 +88,7 @@ export async function asaasRequest<T>(
     const msg =
       errorData?.errors?.[0]?.description ||
       `Erro na requisição Asaas (status ${res.status})`;
+    console.error(`[Asaas API Error] ${options.method || 'GET'} ${url} -> ${res.status}: ${msg}`);
     throw new Error(msg);
   }
 
