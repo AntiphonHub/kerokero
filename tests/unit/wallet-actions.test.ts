@@ -13,9 +13,11 @@ vi.mock('@/lib/appwrite/session', () => ({
   getLoggedInUser: () => mockGetLoggedInUser(),
 }));
 
+const mockUpdateEstablishmentSubaccountStatus = vi.fn();
 vi.mock('@/lib/appwrite/establishments', () => ({
   getEstablishmentByUserId: () => mockGetEstablishmentByUserId(),
   updateEstablishmentBankPixKey: (...args: any[]) => mockUpdateEstablishmentBankPixKey(...args),
+  updateEstablishmentSubaccountStatus: (...args: any[]) => mockUpdateEstablishmentSubaccountStatus(...args),
 }));
 
 vi.mock('@/lib/asaas/transfers', () => ({
@@ -24,7 +26,22 @@ vi.mock('@/lib/asaas/transfers', () => ({
   listSubaccountTransfers: (...args: any[]) => mockListSubaccountTransfers(...args),
 }));
 
-import { getWalletDataAction, requestWithdrawalAction } from '@/actions/wallet';
+const mockGetMyAccountOnboardingUrl = vi.fn();
+const mockGetMyAccountStatus = vi.fn();
+const mockGetMyAccountDocuments = vi.fn();
+const mockUploadSubaccountDocument = vi.fn();
+vi.mock('@/lib/asaas/documents', () => ({
+  getMyAccountOnboardingUrl: (...args: any[]) => mockGetMyAccountOnboardingUrl(...args),
+  getMyAccountStatus: (...args: any[]) => mockGetMyAccountStatus(...args),
+  getMyAccountDocuments: (...args: any[]) => mockGetMyAccountDocuments(...args),
+  uploadSubaccountDocument: (...args: any[]) => mockUploadSubaccountDocument(...args),
+}));
+
+import {
+  getWalletDataAction,
+  requestWithdrawalAction,
+  uploadWalletDocumentAction,
+} from '@/actions/wallet';
 import { encryptSecret } from '@/lib/security/encryption';
 
 describe('Wallet Server Actions', () => {
@@ -149,6 +166,49 @@ describe('Wallet Server Actions', () => {
         'est_123',
         'financeiro@burger.com',
       );
+    });
+  });
+
+  describe('Active KYC Reconciliation & Upload Document', () => {
+    it('automatically reconciles subaccount status to approved when Asaas status is APPROVED', async () => {
+      mockEstablishment.subaccountStatus = 'under_analysis';
+      mockGetSubaccountBalance.mockResolvedValue({ balance: 100, availableBalance: 100 });
+      mockListSubaccountTransfers.mockResolvedValue([]);
+      mockGetMyAccountStatus.mockResolvedValue({ general: 'APPROVED' });
+      mockGetMyAccountDocuments.mockResolvedValue([]);
+
+      const res = await getWalletDataAction();
+
+      expect(res.success).toBe(true);
+      expect(res.data?.subaccountStatus).toBe('approved');
+      expect(mockUpdateEstablishmentSubaccountStatus).toHaveBeenCalledWith('est_123', 'approved');
+    });
+
+    it('successfully uploads document to Asaas via BaaS multipart', async () => {
+      mockUploadSubaccountDocument.mockResolvedValue({ id: 'file_123', status: 'RECEIVED' });
+
+      const formData = new FormData();
+      const fakeFile = new File(['fake-doc'], 'contrato.pdf', { type: 'application/pdf' });
+      formData.set('file', fakeFile);
+
+      const res = await uploadWalletDocumentAction('group_doc_1', formData);
+
+      expect(res.success).toBe(true);
+      expect(mockUploadSubaccountDocument).toHaveBeenCalledWith(
+        plainApiKey,
+        'group_doc_1',
+        expect.any(Blob),
+        'contrato.pdf',
+      );
+      expect(mockUpdateEstablishmentSubaccountStatus).toHaveBeenCalledWith('est_123', 'under_analysis');
+    });
+
+    it('rejects upload when file is missing', async () => {
+      const formData = new FormData();
+      const res = await uploadWalletDocumentAction('group_doc_1', formData);
+
+      expect(res.success).toBe(false);
+      expect(res.message).toMatch(/nenhum arquivo/i);
     });
   });
 });

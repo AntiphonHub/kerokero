@@ -42,7 +42,8 @@ import {
 import { isValidCpf } from '@/lib/validators/cpf';
 import { decryptSecret } from '@/lib/security/encryption';
 import type { EstablishmentDocument } from '@/lib/appwrite/establishments';
-import { isEstablishmentOpen } from '@/lib/utils/operating-hours';
+import { isEstablishmentOpen, isHappyHourActive } from '@/lib/utils/operating-hours';
+import { getProductById } from '@/lib/appwrite/products';
 
 export interface ActionResult<T = unknown> {
   success: boolean;
@@ -327,7 +328,49 @@ export async function submitOrderAction(
     }
 
     const createdOrders: OrderDocument[] = [];
+    const happyHour = establishment ? isHappyHourActive(establishment) : false;
+
     for (const item of parsed.data) {
+      let finalUnitPrice = item.unitPrice;
+      let finalProductName = item.productName;
+
+      // Validação de segurança no backend com os dados reais do produto cadastrado
+      const product = await getProductById(session.establishmentId, item.productId);
+      if (product) {
+        if (!product.isActive) {
+          return {
+            success: false,
+            message: `O produto "${product.name}" está indisponível no momento.`,
+          };
+        }
+        finalProductName = product.name;
+        finalUnitPrice = happyHour && product.happyHourPrice ? product.happyHourPrice : product.price;
+
+        // Se houver opções/adicionais selecionados, valida e soma os valores oficiais dos adicionais cadastrados no produto
+        if (item.selectedOptions && Array.isArray(product.addons) && product.addons.length > 0) {
+          const selectedList = Array.isArray(item.selectedOptions)
+            ? item.selectedOptions
+            : typeof item.selectedOptions === 'string'
+              ? item.selectedOptions.split(',').map((s) => s.trim())
+              : [];
+
+          for (const opt of selectedList) {
+            const optStr = String(opt).trim().toLowerCase();
+            const matchingAddon = product.addons.find(
+              (a) => a.id.toLowerCase() === optStr || a.name.toLowerCase() === optStr,
+            );
+            if (matchingAddon) {
+              finalUnitPrice += matchingAddon.price;
+            }
+          }
+        }
+      } else if (process.env.NODE_ENV === 'production') {
+        return {
+          success: false,
+          message: `Produto "${item.productName}" não encontrado no cardápio deste estabelecimento.`,
+        };
+      }
+
       const order = await createOrder({
         establishmentId: session.establishmentId,
         tableId: session.tableId,
@@ -336,8 +379,8 @@ export async function submitOrderAction(
         participantId: session.participantId,
         participantName: session.participantName,
         productId: item.productId,
-        productName: item.productName,
-        unitPrice: item.unitPrice,
+        productName: finalProductName,
+        unitPrice: finalUnitPrice,
         quantity: item.quantity,
         notes: item.notes,
         selectedOptions: item.selectedOptions,
@@ -617,7 +660,6 @@ export async function pollPixStatusAction(
 
     // Revoga o cookie de sessão do participante quitado
     if (isParticipantSettled) {
-      const cookieStore = await cookies();
       // Mantém a sessão ativa para visualização do comprovante; a revogação ocorre quando o cliente clica em "Finalizar"
       // cookieStore.delete(PARTICIPANT_COOKIE_NAME);
     }

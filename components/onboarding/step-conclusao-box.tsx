@@ -56,6 +56,7 @@ interface StepConclusaoBoxProps {
   orderMode: string;
   subaccountStatus: string;
   initialSubscriptionStatus: string;
+  trialEndsAt?: string | null;
   pixQrCodeImage?: string | null;
   pixCopiaECola?: string | null;
 }
@@ -66,6 +67,7 @@ export function StepConclusaoBox({
   orderMode,
   subaccountStatus,
   initialSubscriptionStatus,
+  trialEndsAt,
   pixQrCodeImage,
   pixCopiaECola,
 }: StepConclusaoBoxProps) {
@@ -75,6 +77,10 @@ export function StepConclusaoBox({
   const [pixPayload, setPixPayload] = useState<string | null>(pixCopiaECola || null);
   const [copied, setCopied] = useState(false);
   const isSubscriber = status === 'active';
+  const isTrialValid =
+    status === 'trialing' &&
+    (!trialEndsAt || Date.parse(trialEndsAt) > Date.now());
+  const canEnterApp = isSubscriber || isTrialValid;
 
   // Animação sequencial por etapas
   const targetRef = useRef<HTMLDivElement>(null);
@@ -94,6 +100,17 @@ export function StepConclusaoBox({
   }, []);
 
   // Sequenciamento temporizado das etapas
+  useEffect(() => {
+    if (!pixImage && !isSubscriber) {
+      getSubscriptionPixAction().then((res) => {
+        if (res) {
+          setPixImage(res.encodedImage);
+          setPixPayload(res.payload);
+        }
+      });
+    }
+  }, [pixImage, isSubscriber]);
+
   useEffect(() => {
     if (!isReady) return;
 
@@ -313,7 +330,9 @@ export function StepConclusaoBox({
             Os dados da sua loja foram registrados e sua conta de recebimentos foi enviada para análise.
             {isSubscriber
               ? ' Sua conta está ativa e seu acesso ao painel está liberado.'
-              : ' Para liberar o acesso ao painel, efetue o pagamento da mensalidade via PIX abaixo.'}
+              : isTrialValid
+              ? ' Seu período de teste gratuito de 7 dias está ativo. Aproveite todas as funcionalidades do sistema.'
+              : ' Seu período de teste encerrou. Para liberar o acesso ao painel, efetue o pagamento da mensalidade via PIX abaixo.'}
           </p>
         </motion.div>
 
@@ -369,17 +388,22 @@ export function StepConclusaoBox({
                   <span className="w-2 h-2 rounded-full bg-emerald-500" />
                   <span className="text-emerald-700">Ativa</span>
                 </>
+              ) : isTrialValid ? (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-amber-500" />
+                  <span className="text-amber-800 font-semibold">Teste Grátis Ativo (7 dias)</span>
+                </>
               ) : (
                 <>
-                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                  <span className="text-amber-700">Aguardando Pagamento PIX</span>
+                  <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+                  <span className="text-rose-700">Período de Testes Expirado</span>
                 </>
               )}
             </span>
           </div>
         </motion.div>
 
-        {/* PIX Billing Box when pending */}
+        {/* PIX Billing Box when not yet subscriber */}
         <AnimatePresence mode="wait">
           {!isSubscriber && (
             <motion.div
@@ -405,13 +429,15 @@ export function StepConclusaoBox({
             >
               <div className="space-y-1">
                 <span className="text-xs font-bold text-amber-600 uppercase tracking-wider">
-                  Mensalidade Bempedi
+                  {isTrialValid ? 'Ativação Definitiva da Assinatura' : 'Mensalidade Bempedi'}
                 </span>
                 <h2 className="text-lg font-extrabold text-zinc-900">
                   R$ 149,00 / mês
                 </h2>
                 <p className="text-xs text-zinc-500">
-                  Escaneie o QR Code abaixo no app do seu banco para ativar instantaneamente:
+                  {isTrialValid
+                    ? 'Garanta o uso contínuo da plataforma após o período de teste efetuando o pagamento via PIX:'
+                    : 'Escaneie o QR Code abaixo no app do seu banco para ativar instantaneamente:'}
                 </p>
               </div>
 
@@ -464,23 +490,31 @@ export function StepConclusaoBox({
           <button
             type="button"
             onClick={() => router.push('/dashboard')}
-            disabled={!isSubscriber}
+            disabled={!canEnterApp}
             className={`w-full h-13 rounded-full font-bold text-sm sm:text-[15px] flex items-center justify-center transition-all ${
-              isSubscriber
+              canEnterApp
                 ? 'bg-amber-500 text-white hover:bg-amber-600 shadow-sm shadow-amber-500/25 cursor-pointer'
                 : 'bg-zinc-200 text-zinc-400 cursor-not-allowed'
             }`}
           >
-            {isSubscriber ? 'Acessar Painel de Controle' : 'Aguardando Pagamento da Mensalidade...'}
+            {canEnterApp ? 'Acessar Painel de Controle' : 'Aguardando Pagamento da Mensalidade...'}
           </button>
 
-          {isSubscriber && (
+          {canEnterApp ? (
             <button
               type="button"
               onClick={() => router.push('/cardapio')}
-              className="text-xs sm:text-sm font-semibold text-zinc-500 hover:text-zinc-900 transition-colors"
+              className="text-xs sm:text-sm font-semibold text-zinc-500 hover:text-zinc-900 transition-colors cursor-pointer"
             >
               Ir para Gestão do Cardápio
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => router.push('/wallet')}
+              className="text-xs sm:text-sm font-semibold text-zinc-600 hover:text-zinc-900 transition-colors pt-1 flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              Precisa resgatar seu saldo de vendas das mesas? Acessar Carteira & Saques →
             </button>
           )}
         </motion.div>

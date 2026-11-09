@@ -147,39 +147,30 @@ export async function submitSubaccountAction(
       return { message: 'Estabelecimento não encontrado.' };
     }
 
-    // 1. Processar arquivos KYC para upload no R2
+    // 1. Processar arquivos KYC opcionais se enviados
+    let docIdKey: string | undefined;
+    let docCnpjKey: string | undefined;
+
     const docIdFile = formData.get('docId') as File | null;
     const docCnpjFile = formData.get('docCnpj') as File | null;
 
-    if (!docIdFile || !(docIdFile instanceof File) || !docIdFile.name) {
-      return {
-        errors: { docId: ['Anexe o documento de identificação (CNH ou RG)'] },
-      };
-    }
-    if (!docCnpjFile || !(docCnpjFile instanceof File) || !docCnpjFile.name) {
-      return {
-        errors: { docCnpj: ['Anexe o Cartão CNPJ ou Contrato Social'] },
-      };
+    if (docIdFile && docIdFile instanceof File && docIdFile.size > 0 && docIdFile.name) {
+      if (docIdFile.size > 10 * 1024 * 1024) {
+        return { errors: { docId: ['Arquivo excede o limite de 10 MB'] } };
+      }
+      docIdKey = generateKycKey(establishment.$id, 'cnh', docIdFile.name);
+      const docIdBuffer = Buffer.from(await docIdFile.arrayBuffer());
+      await uploadKycDocument(docIdKey, docIdBuffer, docIdFile.type || 'application/pdf');
     }
 
-    // Limite de 10 MB
-    if (docIdFile.size > 10 * 1024 * 1024) {
-      return { errors: { docId: ['Arquivo excede o limite de 10 MB'] } };
+    if (docCnpjFile && docCnpjFile instanceof File && docCnpjFile.size > 0 && docCnpjFile.name) {
+      if (docCnpjFile.size > 10 * 1024 * 1024) {
+        return { errors: { docCnpj: ['Arquivo excede o limite de 10 MB'] } };
+      }
+      docCnpjKey = generateKycKey(establishment.$id, 'cnpj', docCnpjFile.name);
+      const docCnpjBuffer = Buffer.from(await docCnpjFile.arrayBuffer());
+      await uploadKycDocument(docCnpjKey, docCnpjBuffer, docCnpjFile.type || 'application/pdf');
     }
-    if (docCnpjFile.size > 10 * 1024 * 1024) {
-      return { errors: { docCnpj: ['Arquivo excede o limite de 10 MB'] } };
-    }
-
-    // Gera chaves R2
-    const docIdKey = generateKycKey(establishment.$id, 'cnh', docIdFile.name);
-    const docCnpjKey = generateKycKey(establishment.$id, 'cnpj', docCnpjFile.name);
-
-    // Faz upload dos buffers no Cloudflare R2
-    const docIdBuffer = Buffer.from(await docIdFile.arrayBuffer());
-    const docCnpjBuffer = Buffer.from(await docCnpjFile.arrayBuffer());
-
-    await uploadKycDocument(docIdKey, docIdBuffer, docIdFile.type || 'application/pdf');
-    await uploadKycDocument(docCnpjKey, docCnpjBuffer, docCnpjFile.type || 'application/pdf');
 
     // 2. Validação dos dados cadastrais com o schema
     const raw = {
@@ -251,7 +242,11 @@ export async function submitSubaccountAction(
       subaccountApiKey = encryptSecret(subaccountApiKey);
     }
 
-    // 4. Salva no Appwrite ativando o onboarding
+    // 4. Salva no Appwrite ativando o onboarding com 7 dias de período de teste gratuito (Free Trial)
+    const now = Date.now();
+    const trialStartDate = new Date(now).toISOString();
+    const trialEndsAt = new Date(now + 7 * 24 * 60 * 60 * 1000).toISOString();
+
     await saveSubaccountAndActivate(establishment.$id, {
       subaccount: parsed.data,
       asaas: {
@@ -261,6 +256,9 @@ export async function submitSubaccountAction(
         walletId: walletId || '',
         subaccountApiKey: subaccountApiKey || '',
       },
+      subscriptionStatus: 'trialing',
+      trialStartDate,
+      trialEndsAt,
     });
 
     // 5. Provisiona antecipadamente as mesas com seus tokens de QR Code

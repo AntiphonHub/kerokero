@@ -13,10 +13,13 @@ import {
   Clock,
   XCircle,
   ExternalLink,
+  ShieldCheck,
 } from 'lucide-react';
 import { WalletData, getWalletDataAction } from '@/actions/wallet';
+import { AsaasDocumentGroup } from '@/lib/asaas/types';
 import { formatBrasiliaDateTime } from '@/lib/formatters';
 import { WithdrawDialog } from './withdraw-dialog';
+import { UploadDocumentModal } from './upload-document-modal';
 
 interface WalletViewProps {
   initialData: WalletData;
@@ -26,6 +29,7 @@ export function WalletView({ initialData }: WalletViewProps) {
   const [data, setData] = useState<WalletData>(initialData);
   const [isRefreshing, startTransition] = useTransition();
   const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const [selectedDoc, setSelectedDoc] = useState<AsaasDocumentGroup | null>(null);
 
   const refreshData = () => {
     startTransition(async () => {
@@ -104,6 +108,71 @@ export function WalletView({ initialData }: WalletViewProps) {
         </div>
       </div>
 
+      {/* Banner de Verificação KYC / Asaas */}
+      {data.subaccountStatus !== 'approved' && (
+        <div className="rounded-2xl border border-amber-500/20 bg-amber-500/[0.04] p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3.5">
+            <div className="size-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 shrink-0 mt-0.5">
+              <ShieldCheck className="size-5" />
+            </div>
+            <div className="space-y-1.5 flex-1">
+              <h3 className="text-sm font-bold text-zinc-900">
+                Verificação de Identidade (KYC) para Saques
+              </h3>
+              <p className="text-xs text-zinc-600 leading-relaxed max-w-2xl">
+                {data.onboardingUrl
+                  ? 'Por exigência regulatória do Banco Central, complete a validação biométrica (selfie com prova de vida) e envio de documentos no ambiente seguro do Asaas para liberar saques e transferências externas.'
+                  : data.pendingDocuments && data.pendingDocuments.length > 0
+                  ? 'Envie os documentos solicitados pelo Asaas abaixo para liberar saques externos da sua conta.'
+                  : 'Sua documentação está em processo de validação pelo Asaas. A liberação de saques ocorre em até 2 horas úteis.'}
+              </p>
+
+              {/* Lista de documentos pendentes quando não há link externo de onboardingUrl */}
+              {!data.onboardingUrl && data.pendingDocuments && data.pendingDocuments.length > 0 && (
+                <div className="pt-2 space-y-2">
+                  {data.pendingDocuments.map((doc) => (
+                    <div
+                      key={doc.id}
+                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-xl bg-white border border-zinc-200/80 shadow-2xs"
+                    >
+                      <div>
+                        <strong className="block text-xs font-bold text-zinc-900">
+                          {doc.title || doc.type}
+                        </strong>
+                        {doc.description && (
+                          <span className="text-[11px] text-zinc-500 leading-tight block mt-0.5">
+                            {doc.description}
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedDoc(doc)}
+                        className="px-3.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shrink-0 self-start sm:self-auto cursor-pointer transition-colors shadow-2xs"
+                      >
+                        Enviar Arquivo
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {data.onboardingUrl && (
+            <a
+              href={data.onboardingUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs transition-colors shrink-0 shadow-2xs"
+            >
+              <span>Completar no Asaas</span>
+              <ExternalLink className="size-3.5" />
+            </a>
+          )}
+        </div>
+      )}
+
       {/* Grid Superior: Saldos e Ação Principal */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Card Saldo Disponível (Destaque Principal) */}
@@ -150,10 +219,19 @@ export function WalletView({ initialData }: WalletViewProps) {
           </div>
 
           <div className="mt-6 pt-4 border-t border-zinc-100 space-y-1.5">
-            <div className="text-xs font-medium text-zinc-700">Recebimento Digital:</div>
+            <div className="text-xs font-medium text-zinc-700">Subconta no Asaas:</div>
             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-zinc-100 text-zinc-800">
-              <span className="h-2 w-2 rounded-full bg-emerald-500" />
-              Ativo e Pronto
+              {data.subaccountStatus === 'approved' ? (
+                <>
+                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                  <span className="text-emerald-700 font-semibold">Verificada e Aprovada</span>
+                </>
+              ) : (
+                <>
+                  <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+                  <span className="text-amber-800 font-medium">Validação Pendente</span>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -294,6 +372,14 @@ export function WalletView({ initialData }: WalletViewProps) {
         bankPixKey={data.bankPixKey}
         repName={data.repName}
         establishmentName={data.establishmentName}
+        onSuccess={refreshData}
+      />
+
+      {/* Modal de Upload de Documento BaaS */}
+      <UploadDocumentModal
+        open={!!selectedDoc}
+        onOpenChange={(open) => !open && setSelectedDoc(null)}
+        documentGroup={selectedDoc}
         onSuccess={refreshData}
       />
     </div>

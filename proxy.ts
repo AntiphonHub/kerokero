@@ -31,9 +31,13 @@ export function proxy(request: NextRequest) {
     pathname === '/dashboard' ||
     pathname.startsWith('/dashboard/') ||
     pathname.startsWith('/onboarding') ||
-    pathname.startsWith('/mesas') ||
-    pathname.startsWith('/cardapio') ||
-    pathname.startsWith('/pedidos');
+    pathname.startsWith('/tables') ||
+    pathname.startsWith('/menu') ||
+    pathname.startsWith('/orders') ||
+    pathname.startsWith('/kds') ||
+    pathname.startsWith('/wallet') ||
+    pathname.startsWith('/analytics') ||
+    pathname.startsWith('/settings');
 
   // If logged in user tries to access auth pages -> redirect to app
   if (isAuthRoute && hasSession) {
@@ -45,7 +49,14 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  return NextResponse.next();
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-pathname', pathname);
+
+  return NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
 }
 
 export const config = {

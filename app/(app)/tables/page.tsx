@@ -27,14 +27,18 @@ export default async function TablesPage() {
 
   // Determina a URL base da aplicação para os QR Codes
   const headersList = await headers();
-  const host = headersList.get('host') || 'localhost:3000';
-  const protocol = headersList.get('x-forwarded-proto') || 'http';
-  const appBaseUrl = `${protocol}://${host}`;
+  const host = headersList.get('host') || 'bempedi.com';
+  const forwardedProto = headersList.get('x-forwarded-proto');
+  const isLocalHost = host.includes('localhost') || host.includes('127.0.0.1') || host.startsWith('192.168.');
+  const protocol = forwardedProto || (isLocalHost ? 'http' : 'https');
+  const envSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, '');
+  const appBaseUrl = envSiteUrl && !isLocalHost ? envSiteUrl : `${protocol}://${host}`;
 
   return (
     <div className="p-4 md:p-8">
       <TablesView
         initialTables={initialTables}
+        establishmentId={establishment.$id}
         establishmentName={establishment.name}
         establishmentLogoUrl={null}
         appBaseUrl={appBaseUrl}

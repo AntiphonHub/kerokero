@@ -86,6 +86,8 @@ async function initEstablishments() {
       { key: 'asaasCustomerId', size: 255, required: false },
       { key: 'asaasSubscriptionId', size: 255, required: false },
       { key: 'subscriptionStatus', size: 32, required: false, default: 'pending' },
+      { key: 'trialStartDate', size: 64, required: false },
+      { key: 'trialEndsAt', size: 64, required: false },
       { key: 'asaasSubaccountId', size: 255, required: false },
       { key: 'asaasWalletId', size: 255, required: false },
       { key: 'asaasSubaccountApiKey', size: 1024, required: false },

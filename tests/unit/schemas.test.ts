@@ -118,10 +118,16 @@ describe('Onboarding Schemas - Step 3: subaccountSchema', () => {
     }
   });
 
-  it('should reject missing documents', () => {
+  it('should accept subaccount without initial document keys (handled via Asaas KYC onboarding)', () => {
+    const { docIdKey, docCnpjKey, ...withoutDocs } = validData;
+    const res = subaccountSchema.safeParse(withoutDocs);
+    expect(res.success).toBe(true);
+  });
+
+  it('should reject missing mandatory bank data', () => {
     const res = subaccountSchema.safeParse({
       ...validData,
-      docIdKey: '',
+      bankPixKey: '',
     });
     expect(res.success).toBe(false);
   });

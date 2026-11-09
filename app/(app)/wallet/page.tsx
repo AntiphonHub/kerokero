@@ -32,6 +32,8 @@ export default async function WalletPage() {
     repName: establishment.repName,
     establishmentName: establishment.name,
     subaccountStatus: establishment.subaccountStatus,
+    onboardingUrl: null,
+    pendingDocuments: [],
     transfers: [],
   };
 

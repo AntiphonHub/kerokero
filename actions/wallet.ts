@@ -4,14 +4,21 @@ import { getLoggedInUser } from '@/lib/appwrite/session';
 import {
   getEstablishmentByUserId,
   updateEstablishmentBankPixKey,
+  updateEstablishmentSubaccountStatus,
 } from '@/lib/appwrite/establishments';
 import {
   getSubaccountBalance,
   createSubaccountTransfer,
   listSubaccountTransfers,
 } from '@/lib/asaas/transfers';
+import {
+  getMyAccountStatus,
+  getMyAccountDocuments,
+  getMyAccountOnboardingUrl,
+  uploadSubaccountDocument,
+} from '@/lib/asaas/documents';
 import { decryptSecret } from '@/lib/security/encryption';
-import { AsaasTransfer } from '@/lib/asaas/types';
+import { AsaasTransfer, AsaasDocumentGroup } from '@/lib/asaas/types';
 
 export interface WalletData {
   balance: number;
@@ -23,6 +30,8 @@ export interface WalletData {
   repName?: string;
   establishmentName?: string;
   subaccountStatus?: string;
+  onboardingUrl?: string | null;
+  pendingDocuments: AsaasDocumentGroup[];
   transfers: AsaasTransfer[];
 }
 
@@ -61,6 +70,35 @@ export async function getWalletDataAction(): Promise<WalletActionResponse<Wallet
 
     const subaccountApiKey = decryptSecret(establishment.asaasSubaccountApiKey);
 
+    let currentSubaccountStatus = establishment.subaccountStatus || 'under_analysis';
+    let onboardingUrl: string | null = null;
+    let pendingDocuments: AsaasDocumentGroup[] = [];
+
+    // Se no banco a subconta ainda não estiver marcada como 'approved', concilia com a API do Asaas
+    if (currentSubaccountStatus !== 'approved') {
+      try {
+        const [accountStatus, docs] = await Promise.all([
+          getMyAccountStatus(subaccountApiKey),
+          getMyAccountDocuments(subaccountApiKey),
+        ]);
+
+        if (accountStatus?.general === 'APPROVED' || accountStatus?.documentation === 'APPROVED') {
+          currentSubaccountStatus = 'approved';
+          await updateEstablishmentSubaccountStatus(establishment.$id, 'approved');
+        } else {
+          pendingDocuments = docs.filter((d) => d.status !== 'APPROVED');
+          for (const doc of pendingDocuments) {
+            if (doc.onboardingUrl) {
+              onboardingUrl = doc.onboardingUrl;
+              break;
+            }
+          }
+        }
+      } catch (checkErr) {
+        console.warn('[Wallet Action] Falha na conciliação com Asaas:', checkErr);
+      }
+    }
+
     const [balanceData, transfers] = await Promise.all([
       getSubaccountBalance(subaccountApiKey),
       listSubaccountTransfers(subaccountApiKey),
@@ -77,7 +115,9 @@ export async function getWalletDataAction(): Promise<WalletActionResponse<Wallet
         bankAccount: establishment.bankAccount,
         repName: establishment.repName,
         establishmentName: establishment.name,
-        subaccountStatus: establishment.subaccountStatus,
+        subaccountStatus: currentSubaccountStatus,
+        onboardingUrl,
+        pendingDocuments,
         transfers,
       },
     };
@@ -177,6 +217,56 @@ export async function requestWithdrawalAction(
     return {
       success: false,
       message: userMsg || 'Falha ao processar o saque. Verifique seus dados bancários ou tente novamente mais tarde.',
+    };
+  }
+}
+
+/**
+ * Envia um documento pendente diretamente para a API do Asaas (fluxo BaaS White-Label).
+ */
+export async function uploadWalletDocumentAction(
+  groupId: string,
+  formData: FormData,
+): Promise<WalletActionResponse> {
+  try {
+    const user = await getLoggedInUser();
+    if (!user) {
+      return { success: false, message: 'Sessão expirada. Faça login novamente.' };
+    }
+
+    const establishment = await getEstablishmentByUserId(user.$id);
+    if (!establishment || !establishment.asaasSubaccountApiKey) {
+      return { success: false, message: 'Subconta não configurada.' };
+    }
+
+    const file = formData.get('file') as File | null;
+    if (!file || !(file instanceof File) || file.size === 0) {
+      return { success: false, message: 'Nenhum arquivo selecionado para envio.' };
+    }
+
+    // Limite de 10 MB
+    if (file.size > 10 * 1024 * 1024) {
+      return { success: false, message: 'O arquivo excede o limite de 10 MB.' };
+    }
+
+    const subaccountApiKey = decryptSecret(establishment.asaasSubaccountApiKey);
+    const blob = new Blob([await file.arrayBuffer()], { type: file.type || 'application/pdf' });
+
+    await uploadSubaccountDocument(subaccountApiKey, groupId, blob, file.name);
+
+    // Se o envio foi aceito pelo Asaas, atualiza o status local para under_analysis
+    await updateEstablishmentSubaccountStatus(establishment.$id, 'under_analysis');
+
+    return {
+      success: true,
+      message: 'Documento enviado com sucesso! Ele já se encontra em análise pelo Asaas.',
+    };
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error('[Upload Document] Erro ao enviar documento:', msg);
+    return {
+      success: false,
+      message: msg || 'Erro ao enviar documento para o Asaas. Tente novamente.',
     };
   }
 }

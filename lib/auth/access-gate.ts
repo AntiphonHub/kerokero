@@ -4,6 +4,7 @@ export interface EvaluateAccessParams {
   isAuthenticated: boolean;
   establishment: EstablishmentDocument | null;
   pathname: string;
+  now?: number;
 }
 
 export interface AccessDecision {
@@ -11,8 +12,28 @@ export interface AccessDecision {
   redirectTo: string | null;
 }
 
+/**
+ * Determina se o estabelecimento tem permissão de operação completa.
+ * Retorna true se a assinatura estiver ativa ('active') ou se o período de teste ('trialing') estiver vigente.
+ */
+export function isEstablishmentAccessible(
+  establishment: EstablishmentDocument,
+  now: number = Date.now(),
+): boolean {
+  if (establishment.subscriptionStatus === 'active') {
+    return true;
+  }
+  if (establishment.subscriptionStatus === 'trialing') {
+    if (!establishment.trialEndsAt) {
+      return true;
+    }
+    return Date.parse(establishment.trialEndsAt) > now;
+  }
+  return false;
+}
+
 export function evaluateUserAccess(params: EvaluateAccessParams): AccessDecision {
-  const { isAuthenticated, establishment, pathname } = params;
+  const { isAuthenticated, establishment, pathname, now = Date.now() } = params;
 
   // 1. Não autenticado -> sempre login
   if (!isAuthenticated) {
@@ -30,7 +51,7 @@ export function evaluateUserAccess(params: EvaluateAccessParams): AccessDecision
     if (!establishment.onboardingCompleted) {
       return { allowed: false, redirectTo: getStepRoute(establishment.onboardingStep) };
     }
-    if (establishment.subscriptionStatus !== 'active') {
+    if (!isEstablishmentAccessible(establishment, now)) {
       return { allowed: false, redirectTo: '/onboarding/conclusao' };
     }
     return { allowed: false, redirectTo: '/dashboard' };
@@ -53,15 +74,21 @@ export function evaluateUserAccess(params: EvaluateAccessParams): AccessDecision
     return { allowed: false, redirectTo: targetRoute };
   }
 
-  // 5. Onboarding concluído mas assinatura inativa (Sem planos gratuitos)
-  if (establishment.subscriptionStatus !== 'active') {
+  // 5. Onboarding concluído mas assinatura inativa / trial expirado
+  const accessible = isEstablishmentAccessible(establishment, now);
+  if (!accessible) {
+    // A rota de Carteira & Saques (/wallet) é expressamente liberada para o lojista
+    // nunca ter seu saldo financeiro de vendas retido ou congelado.
+    if (pathname.startsWith('/wallet')) {
+      return { allowed: true, redirectTo: null };
+    }
     if (pathname === '/onboarding/conclusao') {
       return { allowed: true, redirectTo: null };
     }
     return { allowed: false, redirectTo: '/onboarding/conclusao' };
   }
 
-  // 6. Estabelecimento configurado e assinatura ativa
+  // 6. Estabelecimento configurado e assinatura / trial ativo
   // Se estiver tentando voltar pro onboarding após ativo, manda pro dashboard
   if (pathname.startsWith('/onboarding') && pathname !== '/onboarding/conclusao') {
     return { allowed: false, redirectTo: '/dashboard' };

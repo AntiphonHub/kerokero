@@ -1,9 +1,11 @@
 import { redirect } from 'next/navigation';
 import { connection } from 'next/server';
+import { headers } from 'next/headers';
 import { getSession, getLoggedInUser } from '@/lib/appwrite/session';
 import { getEstablishmentByUserId } from '@/lib/appwrite/establishments';
 import { evaluateUserAccess } from '@/lib/auth/access-gate';
 import { MerchantSidebar } from '@/components/merchant-sidebar';
+import { TrialBanner } from '@/components/trial-banner';
 
 export const instant = false;
 
@@ -21,15 +23,20 @@ export default async function AppLayout({
   const user = await getLoggedInUser();
   const establishment = user ? await getEstablishmentByUserId(user.$id) : null;
 
+  const headersList = await headers();
+  const pathname = headersList.get('x-pathname') || '/dashboard';
+
   const decision = evaluateUserAccess({
     isAuthenticated: true,
     establishment,
-    pathname: '/dashboard',
+    pathname,
   });
 
   if (!decision.allowed && decision.redirectTo) {
     redirect(decision.redirectTo);
   }
+
+  const isTrialing = establishment?.subscriptionStatus === 'trialing';
 
   return (
     <div className="min-h-screen md:h-screen md:overflow-hidden bg-[#F4F4F5] text-zinc-900 flex flex-col md:flex-row">
@@ -41,6 +48,7 @@ export default async function AppLayout({
 
       {/* Conteúdo Principal da Aplicação com rolagem independente no desktop */}
       <main className="flex-1 min-w-0 p-3.5 sm:p-5 md:p-6 lg:p-8 md:h-screen md:overflow-y-auto">
+        {isTrialing && <TrialBanner trialEndsAt={establishment?.trialEndsAt} />}
         {children}
       </main>
     </div>

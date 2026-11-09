@@ -29,6 +29,7 @@ export interface TablesViewProps {
   establishmentName?: string;
   establishmentLogoUrl?: string | null;
   appBaseUrl?: string;
+  establishmentId?: string;
 }
 
 type FilterOption = 'all' | TableStatus;
@@ -38,6 +39,7 @@ export function TablesView({
   establishmentName,
   establishmentLogoUrl,
   appBaseUrl,
+  establishmentId,
 }: TablesViewProps) {
   const [tables, setTables] = useState<TableDocument[]>(initialTables);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
@@ -60,6 +62,11 @@ export function TablesView({
     const unsubscribe = client.subscribe(channel, (response) => {
       const payload = response.payload as TableDocument;
       if (!payload || !payload.$id) return;
+
+      const currentEstId = establishmentId || initialTables[0]?.establishmentId;
+      if (currentEstId && payload.establishmentId && payload.establishmentId !== currentEstId) {
+        return;
+      }
 
       const events = response.events;
 

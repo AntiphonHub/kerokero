@@ -228,6 +228,8 @@ export async function settleParticipantPayment(
     {
       participants: JSON.stringify(participants),
       paidAmount: newPaidAmount,
+      pixPaidAmount: newPixPaidAmount,
+      paymentMethod,
       status,
       closedAt,
     },

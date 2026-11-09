@@ -113,3 +113,25 @@ export interface AsaasTransfer {
   type?: string;
   transactionReceiptUrl?: string;
 }
+
+export interface AsaasDocumentGroup {
+  id: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'NOT_SENT';
+  type: string;
+  title?: string;
+  description?: string;
+  responsible?: {
+    name?: string;
+    cpfCnpj?: string;
+    type?: string;
+  };
+  onboardingUrl?: string | null;
+}
+
+export interface AsaasAccountStatus {
+  id?: string;
+  commercialInfo?: string;
+  bankAccountInfo?: string;
+  documentation?: string;
+  general?: string;
+}

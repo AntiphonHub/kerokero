@@ -95,8 +95,8 @@ export const subaccountSchema = z.object({
   bankPixKey: z.string().trim().min(3, { message: 'Chave PIX é obrigatória' }),
   bankAgency: z.string().trim().min(1, { message: 'Agência é obrigatória' }),
   bankAccount: z.string().trim().min(1, { message: 'Conta é obrigatória' }),
-  docIdKey: z.string().trim().min(1, { message: 'Documento de identificação (CNH/RG) é obrigatório' }),
-  docCnpjKey: z.string().trim().min(1, { message: 'Cartão CNPJ ou Contrato Social é obrigatório' }),
+  docIdKey: z.string().trim().optional(),
+  docCnpjKey: z.string().trim().optional(),
 });
 
 export type SubaccountInput = z.input<typeof subaccountSchema>;

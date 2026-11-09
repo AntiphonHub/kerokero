@@ -109,4 +109,109 @@ describe('Access Gate (No Free Tier)', () => {
 
     expect(decision.allowed).toBe(true);
   });
+
+  describe('Free Trial (7 Days) & Paywall Gate', () => {
+    const baseDate = 1770000000000; // Mock timestamp
+    const futureDate = new Date(baseDate + 7 * 24 * 60 * 60 * 1000).toISOString();
+    const pastDate = new Date(baseDate - 1000).toISOString();
+
+    it('should allow access to dashboard during valid trial period', () => {
+      const estTrialing = {
+        $id: 'est_1',
+        onboardingStep: 4,
+        onboardingCompleted: true,
+        subscriptionStatus: 'trialing',
+        trialEndsAt: futureDate,
+      } as unknown as EstablishmentDocument;
+
+      const decision = evaluateUserAccess({
+        isAuthenticated: true,
+        establishment: estTrialing,
+        pathname: '/dashboard',
+        now: baseDate,
+      });
+
+      expect(decision.allowed).toBe(true);
+      expect(decision.redirectTo).toBeNull();
+    });
+
+    it('should redirect to /onboarding/conclusao when trial is expired and attempting to access dashboard', () => {
+      const estExpired = {
+        $id: 'est_1',
+        onboardingStep: 4,
+        onboardingCompleted: true,
+        subscriptionStatus: 'trialing',
+        trialEndsAt: pastDate,
+      } as unknown as EstablishmentDocument;
+
+      const decision = evaluateUserAccess({
+        isAuthenticated: true,
+        establishment: estExpired,
+        pathname: '/dashboard',
+        now: baseDate,
+      });
+
+      expect(decision.allowed).toBe(false);
+      expect(decision.redirectTo).toBe('/onboarding/conclusao');
+    });
+
+    it('should allow access to /wallet even when trial has expired', () => {
+      const estExpired = {
+        $id: 'est_1',
+        onboardingStep: 4,
+        onboardingCompleted: true,
+        subscriptionStatus: 'trialing',
+        trialEndsAt: pastDate,
+      } as unknown as EstablishmentDocument;
+
+      const decision = evaluateUserAccess({
+        isAuthenticated: true,
+        establishment: estExpired,
+        pathname: '/wallet',
+        now: baseDate,
+      });
+
+      expect(decision.allowed).toBe(true);
+      expect(decision.redirectTo).toBeNull();
+    });
+
+    it('should allow access to /wallet even when subscription is pending or overdue', () => {
+      const estOverdue = {
+        $id: 'est_1',
+        onboardingStep: 4,
+        onboardingCompleted: true,
+        subscriptionStatus: 'overdue',
+      } as unknown as EstablishmentDocument;
+
+      const decision = evaluateUserAccess({
+        isAuthenticated: true,
+        establishment: estOverdue,
+        pathname: '/wallet',
+        now: baseDate,
+      });
+
+      expect(decision.allowed).toBe(true);
+      expect(decision.redirectTo).toBeNull();
+    });
+
+    it('should redirect /login to /dashboard when user has an active trial', () => {
+      const estTrialing = {
+        $id: 'est_1',
+        onboardingStep: 4,
+        onboardingCompleted: true,
+        subscriptionStatus: 'trialing',
+        trialEndsAt: futureDate,
+      } as unknown as EstablishmentDocument;
+
+      const decision = evaluateUserAccess({
+        isAuthenticated: true,
+        establishment: estTrialing,
+        pathname: '/login',
+        now: baseDate,
+      });
+
+      expect(decision.allowed).toBe(false);
+      expect(decision.redirectTo).toBe('/dashboard');
+    });
+  });
 });

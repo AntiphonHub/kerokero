@@ -156,7 +156,7 @@ export function TabView({
                               )}
                               {order.notes && (
                                 <p className="italic text-zinc-400 truncate">
-                                  "{order.notes}"
+                                  &quot;{order.notes}&quot;
                                 </p>
                               )}
                             </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, type ChangeEvent, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'motion/react';
@@ -8,7 +8,7 @@ import { submitSubaccountAction } from '@/actions/onboarding';
 import { MaskedInput } from '@/components/ui/masked-input';
 import { maskCpf } from '@/lib/masks';
 import { Button } from '@/components/ui/button';
-import { FileText, UploadCloud } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, Zap, ArrowRight } from 'lucide-react';
 import { containerVariants, itemVariants } from '@/lib/motion';
 
 interface StepSubcontaFormProps {
@@ -27,27 +27,9 @@ interface StepSubcontaFormProps {
 export function StepSubcontaForm({ initialData }: StepSubcontaFormProps) {
   const router = useRouter();
 
-  const [docIdFile, setDocIdFile] = useState<File | null>(null);
-  const [docCnpjFile, setDocCnpjFile] = useState<File | null>(null);
-
-  const docIdInputRef = useRef<HTMLInputElement>(null);
-  const docCnpjInputRef = useRef<HTMLInputElement>(null);
-
   const [isPending, setIsPending] = useState(false);
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [message, setMessage] = useState<string | null>(null);
-
-  const handleDocIdChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setDocIdFile(e.target.files[0]);
-    }
-  };
-
-  const handleDocCnpjChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setDocCnpjFile(e.target.files[0]);
-    }
-  };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -57,9 +39,6 @@ export function StepSubcontaForm({ initialData }: StepSubcontaFormProps) {
 
     try {
       const formData = new FormData(e.currentTarget);
-      if (docIdFile) formData.set('docId', docIdFile);
-      if (docCnpjFile) formData.set('docCnpj', docCnpjFile);
-
       const res = await submitSubaccountAction({}, formData);
       setIsPending(false);
 
@@ -76,7 +55,7 @@ export function StepSubcontaForm({ initialData }: StepSubcontaFormProps) {
       }
     } catch (err: unknown) {
       setIsPending(false);
-      const msg = err instanceof Error ? err.message : 'Erro ao processar documentação.';
+      const msg = err instanceof Error ? err.message : 'Erro ao processar dados da subconta.';
       setMessage(msg);
     }
   };
@@ -251,132 +230,43 @@ export function StepSubcontaForm({ initialData }: StepSubcontaFormProps) {
           </div>
         </motion.div>
 
-        {/* Right Column: KYC Upload Cards to Cloudflare R2 */}
+        {/* Right Column: Asaas Compliance & Account Activation Card */}
         <motion.div variants={itemVariants} className="space-y-4">
           <span className="block text-sm font-bold text-zinc-900 pb-2 border-b border-zinc-100">
-            Documentação obrigatória (KYC)
+            Validação Regulatória & Ativação
           </span>
 
-          {/* Upload 1: CNH ou RG */}
-          <div>
-            <label className="block text-xs font-semibold text-zinc-800 mb-1.5">
-              Documento de identificação (CNH ou RG)
-            </label>
-            <input
-              type="file"
-              ref={docIdInputRef}
-              name="docId"
-              accept=".pdf,.png,.jpg,.jpeg"
-              onChange={handleDocIdChange}
-              className="hidden"
-            />
-            {docIdFile ? (
-              <div className="border border-zinc-200 rounded-2xl p-3.5 bg-white flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-zinc-100 flex items-center justify-center text-zinc-700">
-                    <FileText className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <strong className="block text-xs font-bold text-zinc-900 truncate max-w-[200px]">
-                      {docIdFile.name}
-                    </strong>
-                    <span className="text-[11px] text-zinc-500">
-                      {(docIdFile.size / 1024 / 1024).toFixed(1)} MB • Pronto para envio
-                    </span>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => docIdInputRef.current?.click()}
-                  className="text-xs font-semibold text-zinc-600 hover:text-zinc-900 underline"
-                >
-                  Substituir
-                </button>
+          <div className="bg-zinc-50/80 border border-zinc-200/90 rounded-2xl p-5 space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-700 shrink-0">
+                <ShieldCheck className="w-5 h-5" />
               </div>
-            ) : (
-              <div
-                onClick={() => docIdInputRef.current?.click()}
-                className="border-2 border-dashed border-zinc-300 rounded-2xl p-5 text-center cursor-pointer hover:border-amber-500 hover:bg-amber-500/[0.02] transition-colors bg-zinc-50/50"
-              >
-                <UploadCloud className="w-7 h-7 mx-auto text-amber-500 mb-1.5" />
-                <span className="block text-xs font-bold text-zinc-800 mb-0.5">
-                  Clique ou selecione o documento CNH/RG
-                </span>
-                <span className="block text-[11px] text-zinc-500 mb-2.5">
-                  Formatos PDF, PNG ou JPG até 10 MB
-                </span>
-                <button
-                  type="button"
-                  className="h-8 px-4 rounded-lg bg-white border border-zinc-300 text-xs font-semibold text-zinc-800 hover:bg-zinc-100"
-                >
-                  Procurar arquivo
-                </button>
+              <div className="space-y-1">
+                <h3 className="text-xs font-bold text-zinc-900">
+                  Subconta Bancária Asaas Integrada
+                </h3>
+                <p className="text-[11.5px] text-zinc-600 leading-relaxed">
+                  Os pagamentos via PIX realizados nas mesas caem diretamente na sua subconta Asaas vinculada ao seu CNPJ.
+                </p>
               </div>
-            )}
-            {errors?.docId && (
-              <p className="mt-1 text-xs text-red-600">{errors.docId[0]}</p>
-            )}
-          </div>
+            </div>
 
-          {/* Upload 2: Cartão CNPJ ou Contrato Social */}
-          <div className="pt-2">
-            <label className="block text-xs font-semibold text-zinc-800 mb-1.5">
-              Cartão CNPJ ou Contrato Social
-            </label>
-            <input
-              type="file"
-              ref={docCnpjInputRef}
-              name="docCnpj"
-              accept=".pdf,.png,.jpg,.jpeg"
-              onChange={handleDocCnpjChange}
-              className="hidden"
-            />
-            {docCnpjFile ? (
-              <div className="border border-zinc-200 rounded-2xl p-3.5 bg-white flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-zinc-100 flex items-center justify-center text-zinc-700">
-                    <FileText className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <strong className="block text-xs font-bold text-zinc-900 truncate max-w-[200px]">
-                      {docCnpjFile.name}
-                    </strong>
-                    <span className="text-[11px] text-zinc-500">
-                      {(docCnpjFile.size / 1024 / 1024).toFixed(1)} MB • Pronto para envio
-                    </span>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => docCnpjInputRef.current?.click()}
-                  className="text-xs font-semibold text-zinc-600 hover:text-zinc-900 underline"
-                >
-                  Substituir
-                </button>
+            <div className="pt-3 border-t border-zinc-200/60 space-y-2.5 text-xs text-zinc-600">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Recebimentos instantâneos por PIX já habilitados na mesa</span>
               </div>
-            ) : (
-              <div
-                onClick={() => docCnpjInputRef.current?.click()}
-                className="border-2 border-dashed border-zinc-300 rounded-2xl p-5 text-center cursor-pointer hover:border-amber-500 hover:bg-amber-500/[0.02] transition-colors bg-zinc-50/50"
-              >
-                <UploadCloud className="w-7 h-7 mx-auto text-amber-500 mb-1.5" />
-                <span className="block text-xs font-bold text-zinc-800 mb-0.5">
-                  Clique ou selecione o Cartão CNPJ
-                </span>
-                <span className="block text-[11px] text-zinc-500 mb-2.5">
-                  Formatos PDF, PNG ou JPG até 10 MB
-                </span>
-                <button
-                  type="button"
-                  className="h-8 px-4 rounded-lg bg-white border border-zinc-300 text-xs font-semibold text-zinc-800 hover:bg-zinc-100"
-                >
-                  Procurar arquivo
-                </button>
+              <div className="flex items-center gap-2">
+                <Zap className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>7 dias de teste gratuito liberados imediatamente</span>
               </div>
-            )}
-            {errors?.docCnpj && (
-              <p className="mt-1 text-xs text-red-600">{errors.docCnpj[0]}</p>
-            )}
+              <div className="flex items-start gap-2">
+                <ArrowRight className="w-4 h-4 text-zinc-400 shrink-0 mt-0.5" />
+                <span className="text-zinc-500">
+                  A biometria facial e documentos regulatórios do Bacen são validados pelo link oficial do Asaas na Carteira para liberação de saques.
+                </span>
+              </div>
+            </div>
           </div>
         </motion.div>
       </div>
@@ -394,7 +284,7 @@ export function StepSubcontaForm({ initialData }: StepSubcontaFormProps) {
           disabled={isPending}
           className="h-12 px-7 rounded-full bg-amber-500 text-white font-bold hover:bg-amber-600 shadow-sm shadow-amber-500/25 transition-all cursor-pointer"
         >
-          {isPending ? 'Processando integração...' : 'Enviar documentação e finalizar'}
+          {isPending ? 'Criando subconta e ativando teste...' : 'Concluir cadastro e iniciar teste grátis'}
         </Button>
       </motion.div>
     </motion.form>

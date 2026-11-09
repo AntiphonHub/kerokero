@@ -65,7 +65,8 @@ export default async function OnboardingConclusaoPage() {
       tablesCount={est.tablesCount || 15}
       orderMode={est.orderMode || 'direct'}
       subaccountStatus={est.subaccountStatus || 'under_analysis'}
-      initialSubscriptionStatus={est.subscriptionStatus || 'pending'}
+      initialSubscriptionStatus={est.subscriptionStatus || 'trialing'}
+      trialEndsAt={est.trialEndsAt}
       pixQrCodeImage={pixQrCodeImage}
       pixCopiaECola={pixCopiaECola}
     />

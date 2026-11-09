@@ -27,6 +27,8 @@ async function main() {
     { type: 'string', key: 'happyHourStartTime', size: 16, required: false },
     { type: 'string', key: 'happyHourEndTime', size: 16, required: false },
     { type: 'string', key: 'asaasSubaccountApiKey', size: 1024, required: false },
+    { type: 'string', key: 'trialStartDate', size: 64, required: false },
+    { type: 'string', key: 'trialEndsAt', size: 64, required: false },
   ];
 
   for (const attr of attrs) {

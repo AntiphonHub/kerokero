@@ -1,8 +1,22 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import { cancelSubscriptionAction } from '@/actions/settings';
-import { CreditCard, CheckCircle2, AlertCircle, Loader2, AlertTriangle, X, ShieldAlert } from 'lucide-react';
+import {
+  getSubscriptionPixAction,
+  checkSubscriptionStatusAction,
+} from '@/actions/onboarding';
+import {
+  CreditCard,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+  AlertTriangle,
+  X,
+  ShieldAlert,
+  Copy,
+  CheckCheck,
+} from 'lucide-react';
 import type { EstablishmentDocument } from '@/lib/appwrite/establishments';
 
 interface SubscriptionTabProps {
@@ -11,9 +25,48 @@ interface SubscriptionTabProps {
 
 export function SubscriptionTab({ establishment }: SubscriptionTabProps) {
   const [isPending, startTransition] = useTransition();
-  const [status, setStatus] = useState<string>(establishment.subscriptionStatus || 'active');
+  const [status, setStatus] = useState<string>(establishment.subscriptionStatus || 'trialing');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const [pixImage, setPixImage] = useState<string | null>(null);
+  const [pixPayload, setPixPayload] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [isLoadingPix, setIsLoadingPix] = useState(false);
+
+  useEffect(() => {
+    if (status !== 'active') {
+      setIsLoadingPix(true);
+      getSubscriptionPixAction().then((data) => {
+        setIsLoadingPix(false);
+        if (data) {
+          setPixImage(data.encodedImage);
+          setPixPayload(data.payload);
+        }
+      });
+
+      const interval = setInterval(async () => {
+        try {
+          const currentStatus = await checkSubscriptionStatusAction();
+          if (currentStatus === 'active') {
+            setStatus('active');
+            clearInterval(interval);
+          }
+        } catch {
+          // retry
+        }
+      }, 4000);
+
+      return () => clearInterval(interval);
+    }
+  }, [status]);
+
+  const handleCopyPix = () => {
+    if (!pixPayload) return;
+    navigator.clipboard.writeText(pixPayload);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  };
 
   const handleCancelSubscription = () => {
     setFeedback(null);
@@ -67,6 +120,10 @@ export function SubscriptionTab({ establishment }: SubscriptionTabProps) {
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                 Ativo
               </span>
+            ) : status === 'trialing' ? (
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                Teste Gratuito (7 dias)
+              </span>
             ) : (
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
                 Pendente
@@ -97,6 +154,71 @@ export function SubscriptionTab({ establishment }: SubscriptionTabProps) {
             </div>
           </div>
         </div>
+
+        {/* Checkout PIX quando não ativo (Trialing ou Pendente) */}
+        {status !== 'active' && (
+          <div className="bg-white border-2 border-amber-500/80 rounded-2xl p-5 text-center space-y-4 shadow-sm overflow-hidden">
+            <div className="space-y-1">
+              <span className="text-xs font-bold text-amber-600 uppercase tracking-wider">
+                Ativação Definitiva da Assinatura
+              </span>
+              <h2 className="text-lg font-extrabold text-zinc-900">
+                R$ 149,00 / mês
+              </h2>
+              <p className="text-xs text-zinc-500">
+                Escaneie o QR Code abaixo no app do seu banco para ativar instantaneamente:
+              </p>
+            </div>
+
+            {pixImage ? (
+              <div className="flex justify-center my-3">
+                <img
+                  src={`data:image/png;base64,${pixImage}`}
+                  alt="QR Code PIX Mensalidade Bempedi"
+                  className="w-44 h-44 rounded-xl border border-zinc-200 p-2 bg-white"
+                />
+              </div>
+            ) : (
+              <div className="w-44 h-44 mx-auto rounded-xl bg-zinc-100 flex items-center justify-center text-xs text-zinc-400">
+                {isLoadingPix ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-amber-500" />
+                    <span>Carregando QR Code...</span>
+                  </div>
+                ) : (
+                  <span>Carregando QR Code...</span>
+                )}
+              </div>
+            )}
+
+            {pixPayload && (
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  onClick={handleCopyPix}
+                  className="w-full h-11 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-950 border border-amber-500/30 text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                >
+                  {copied ? (
+                    <>
+                      <CheckCheck className="w-4 h-4 text-emerald-600" />
+                      Chave PIX copiada com sucesso!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4 text-amber-700" />
+                      Copiar código PIX (Copia e Cola)
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+
+            <div className="flex items-center justify-center gap-2 text-xs text-zinc-500 pt-2 border-t border-zinc-100">
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-500" />
+              <span>Identificando pagamento em tempo real...</span>
+            </div>
+          </div>
+        )}
 
         {/* Recursos Inclusos */}
         <div className="space-y-2 text-xs text-zinc-600">

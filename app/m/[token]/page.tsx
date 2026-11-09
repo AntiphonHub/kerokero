@@ -19,6 +19,7 @@ import {
   isHappyHourActive,
   formatOperatingHours,
 } from '@/lib/utils/operating-hours';
+import { isEstablishmentAccessible } from '@/lib/auth/access-gate';
 
 interface PageProps {
   params: Promise<{ token: string }>;
@@ -72,6 +73,25 @@ export default async function ClientTablePage(props: PageProps) {
   const establishment = await getEstablishmentById(table.establishmentId);
   const establishmentName = establishment?.name || 'Bempedi';
   const tableLabel = table.label || `Mesa ${table.number}`;
+
+  // 3b. Verificar se o estabelecimento possui assinatura ou período de testes vigente
+  if (establishment && !isEstablishmentAccessible(establishment)) {
+    return (
+      <PwaShell tableLabel="Atendimento Suspenso" establishmentName={establishmentName}>
+        <div className="flex flex-col flex-1 items-center justify-center p-6 text-center">
+          <div className="size-16 rounded-2xl bg-zinc-100 border border-zinc-200/80 flex items-center justify-center text-zinc-500 mb-6 shadow-xs">
+            <AlertCircle className="size-8" />
+          </div>
+          <h1 className="text-xl font-bold text-zinc-900 mb-2 tracking-tight">
+            Atendimento Indisponível
+          </h1>
+          <p className="text-sm text-zinc-600 leading-relaxed max-w-sm">
+            O autoatendimento digital desta mesa está temporariamente suspenso pelo estabelecimento. Por favor, solicite atendimento presencial.
+          </p>
+        </div>
+      </PwaShell>
+    );
+  }
 
   // 4. Verificar sessão ativa do participante
   const sessionResult = await getClientSessionAction();

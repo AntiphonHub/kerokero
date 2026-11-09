@@ -77,6 +77,10 @@ export async function resolveServiceCallAction(
       return { success: false, message: 'Estabelecimento não encontrado.' };
     }
 
+    const table = await getTableById(tableId);
+    if (!table || table.establishmentId !== establishment.$id) {
+      return { success: false, message: 'Mesa não encontrada ou não pertence a este estabelecimento.' };
+    }
     await resolveServiceCall(callId, tableId, fallbackStatus);
     return { success: true };
   } catch (error: unknown) {
@@ -101,8 +105,12 @@ export async function resetTableAction(tableId: string): Promise<ActionResponse<
       return { success: false, message: 'Estabelecimento não encontrado.' };
     }
 
-    const table = await resetTableSession(tableId);
-    return { success: true, data: table };
+    const table = await getTableById(tableId);
+    if (!table || table.establishmentId !== establishment.$id) {
+      return { success: false, message: 'Mesa não encontrada ou não pertence a este estabelecimento.' };
+    }
+    const updatedTable = await resetTableSession(tableId);
+    return { success: true, data: updatedTable };
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : String(error);
     console.error('[Tables Action] Erro ao resetar mesa:', msg);

@@ -75,6 +75,7 @@ describe('Tables Server Actions', () => {
     it('resolves the specified service call', async () => {
       mockGetLoggedInUser.mockResolvedValueOnce({ $id: 'u1' });
       mockGetEstablishmentByUserId.mockResolvedValueOnce({ $id: 'est_1' });
+      mockGetTableById.mockResolvedValueOnce({ $id: 't1', establishmentId: 'est_1' });
       mockResolveServiceCall.mockResolvedValueOnce(undefined);
 
       const res = await resolveServiceCallAction('sc_1', 't1', 'occupied');
@@ -87,6 +88,7 @@ describe('Tables Server Actions', () => {
     it('resets a table session back to idle', async () => {
       mockGetLoggedInUser.mockResolvedValueOnce({ $id: 'u1' });
       mockGetEstablishmentByUserId.mockResolvedValueOnce({ $id: 'est_1' });
+      mockGetTableById.mockResolvedValueOnce({ $id: 't1', establishmentId: 'est_1' });
       mockResetTableSession.mockResolvedValueOnce({ $id: 't1', status: 'idle' });
 
       const res = await resetTableAction('t1');

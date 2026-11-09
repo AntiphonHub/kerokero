@@ -34,7 +34,9 @@ export interface EstablishmentDocument extends Models.DefaultDocument {
   docCnpjKey?: string;
   asaasCustomerId?: string;
   asaasSubscriptionId?: string;
-  subscriptionStatus?: 'pending' | 'active' | 'overdue' | 'canceled';
+  subscriptionStatus?: 'pending' | 'active' | 'overdue' | 'canceled' | 'trialing';
+  trialStartDate?: string;
+  trialEndsAt?: string;
   asaasSubaccountId?: string;
   asaasWalletId?: string;
   asaasSubaccountApiKey?: string;
@@ -155,6 +157,9 @@ export interface SaveSubaccountActivationParams {
     walletId: string;
     subaccountApiKey?: string;
   };
+  subscriptionStatus?: 'pending' | 'active' | 'overdue' | 'canceled' | 'trialing';
+  trialStartDate?: string;
+  trialEndsAt?: string;
 }
 
 export async function saveSubaccountAndActivate(
@@ -163,7 +168,7 @@ export async function saveSubaccountAndActivate(
 ): Promise<EstablishmentDocument> {
   const { databases } = createAdminClient();
 
-  const payload = {
+  const payload: Record<string, unknown> = {
     repName: params.subaccount.repName,
     repCpf: params.subaccount.repCpf,
     repBirthDate: params.subaccount.repBirthDate,
@@ -182,19 +187,47 @@ export async function saveSubaccountAndActivate(
     onboardingCompleted: true,
   };
 
-  const updated = await databases.updateDocument(
-    appwriteConfig.databaseId,
-    appwriteConfig.collections.establishments,
-    establishmentId,
-    payload,
-  );
+  if (params.subscriptionStatus) {
+    payload.subscriptionStatus = params.subscriptionStatus;
+  }
+  if (params.trialStartDate) {
+    payload.trialStartDate = params.trialStartDate;
+  }
+  if (params.trialEndsAt) {
+    payload.trialEndsAt = params.trialEndsAt;
+  }
 
-  return toPlainObject<EstablishmentDocument>(updated);
+  try {
+    const updated = await databases.updateDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.collections.establishments,
+      establishmentId,
+      payload,
+    );
+
+    return toPlainObject<EstablishmentDocument>(updated);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes('Unknown attribute') && (msg.includes('trialStartDate') || msg.includes('trialEndsAt'))) {
+      console.warn('[Appwrite] Atributos de trial ausentes na collection. Atualizando documento sem eles...');
+      delete payload.trialStartDate;
+      delete payload.trialEndsAt;
+
+      const fallbackUpdated = await databases.updateDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.collections.establishments,
+        establishmentId,
+        payload,
+      );
+      return toPlainObject<EstablishmentDocument>(fallbackUpdated);
+    }
+    throw err;
+  }
 }
 
 export async function updateSubscriptionStatus(
   subscriptionId: string,
-  status: 'active' | 'pending' | 'overdue' | 'canceled',
+  status: 'active' | 'pending' | 'overdue' | 'canceled' | 'trialing',
 ): Promise<EstablishmentDocument | null> {
   const { databases } = createAdminClient();
 
@@ -270,6 +303,20 @@ export async function updateEstablishmentBankPixKey(
   return toPlainObject<EstablishmentDocument>(updated);
 }
 
+
+export async function updateEstablishmentSubaccountStatus(
+  establishmentId: string,
+  status: 'pending_documents' | 'under_analysis' | 'approved' | 'rejected',
+): Promise<EstablishmentDocument> {
+  const { databases } = createAdminClient();
+  const updated = await databases.updateDocument(
+    appwriteConfig.databaseId,
+    appwriteConfig.collections.establishments,
+    establishmentId,
+    { subaccountStatus: status },
+  );
+  return toPlainObject<EstablishmentDocument>(updated);
+}
 
 export async function updateEstablishmentData(
   establishmentId: string,
