@@ -91,7 +91,7 @@ export function LoginForm() {
           error={errors.password?.[0]}
           rightElement={
             <Link
-              href="#"
+              href="/esqueci-senha"
               className="text-[13px] font-medium text-zinc-500 no-underline transition-colors hover:text-zinc-900 hover:underline"
             >
               Esqueceu a senha?

@@ -225,9 +225,8 @@ export async function saveSubaccountAndActivate(
   }
 }
 
-export async function updateSubscriptionStatus(
+export async function getEstablishmentBySubscriptionId(
   subscriptionId: string,
-  status: 'active' | 'pending' | 'overdue' | 'canceled' | 'trialing',
 ): Promise<EstablishmentDocument | null> {
   const { databases } = createAdminClient();
 
@@ -241,7 +240,19 @@ export async function updateSubscriptionStatus(
     return null;
   }
 
-  const est = res.documents[0];
+  return toPlainObject<EstablishmentDocument>(res.documents[0]);
+}
+
+export async function updateSubscriptionStatus(
+  subscriptionId: string,
+  status: 'active' | 'pending' | 'overdue' | 'canceled' | 'trialing',
+): Promise<EstablishmentDocument | null> {
+  const est = await getEstablishmentBySubscriptionId(subscriptionId);
+  if (!est) {
+    return null;
+  }
+
+  const { databases } = createAdminClient();
   const updated = await databases.updateDocument(
     appwriteConfig.databaseId,
     appwriteConfig.collections.establishments,

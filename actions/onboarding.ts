@@ -6,8 +6,8 @@ import {
   saveStoreDataStep,
   saveOperationStep,
   saveSubaccountAndActivate,
-  updateSubscriptionStatus,
 } from '@/lib/appwrite/establishments';
+import { activateSubscriptionAndNotify } from '@/lib/subscriptions/activation';
 import {
   storeDataSchema,
   operationSchema,
@@ -325,7 +325,9 @@ export async function checkSubscriptionStatusAction(): Promise<string> {
       );
 
       if (isPaid) {
-        await updateSubscriptionStatus(est.asaasSubscriptionId, 'active');
+        await activateSubscriptionAndNotify(est.asaasSubscriptionId, {
+          preloadedPayments: payments,
+        });
         return 'active';
       }
     } catch (err) {

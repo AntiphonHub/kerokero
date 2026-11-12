@@ -1,9 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getLoggedInUser } from '@/lib/appwrite/session';
-import {
-  getEstablishmentByUserId,
-  updateSubscriptionStatus,
-} from '@/lib/appwrite/establishments';
+import { getEstablishmentByUserId } from '@/lib/appwrite/establishments';
+import { activateSubscriptionAndNotify } from '@/lib/subscriptions/activation';
 import { ensureEstablishmentTables } from '@/lib/appwrite/tables';
 import {
   getAsaasSubscriptionPix,
@@ -36,7 +34,9 @@ export default async function OnboardingConclusaoPage() {
         (p) => p.status === 'RECEIVED' || p.status === 'CONFIRMED',
       );
       if (isPaid) {
-        await updateSubscriptionStatus(est.asaasSubscriptionId, 'active');
+        await activateSubscriptionAndNotify(est.asaasSubscriptionId, {
+          preloadedPayments: payments,
+        });
         await ensureEstablishmentTables(est.$id, est.tablesCount || 10);
         redirect('/dashboard');
       }

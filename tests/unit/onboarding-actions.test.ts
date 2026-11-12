@@ -21,6 +21,10 @@ vi.mock('@/lib/appwrite/tables', () => ({
   ensureEstablishmentTables: vi.fn(),
 }));
 
+vi.mock('@/lib/subscriptions/activation', () => ({
+  activateSubscriptionAndNotify: vi.fn(),
+}));
+
 vi.mock('@/lib/asaas/customers', () => ({
   createAsaasCustomer: vi.fn(),
   createOrGetAsaasCustomer: vi.fn(),

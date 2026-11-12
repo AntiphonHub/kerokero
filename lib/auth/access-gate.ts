@@ -35,16 +35,21 @@ export function isEstablishmentAccessible(
 export function evaluateUserAccess(params: EvaluateAccessParams): AccessDecision {
   const { isAuthenticated, establishment, pathname, now = Date.now() } = params;
 
+  const isAuthPath =
+    pathname.startsWith('/login') ||
+    pathname.startsWith('/cadastro') ||
+    pathname.startsWith('/esqueci-senha');
+
   // 1. Não autenticado -> sempre login
   if (!isAuthenticated) {
-    if (pathname.startsWith('/login') || pathname.startsWith('/cadastro')) {
+    if (isAuthPath) {
       return { allowed: true, redirectTo: null };
     }
     return { allowed: false, redirectTo: '/login' };
   }
 
-  // 2. Autenticado tentando acessar páginas de auth (/login, /cadastro)
-  if (pathname.startsWith('/login') || pathname.startsWith('/cadastro')) {
+  // 2. Autenticado tentando acessar páginas de auth (/login, /cadastro, /esqueci-senha)
+  if (isAuthPath) {
     if (!establishment) {
       return { allowed: false, redirectTo: '/onboarding/loja' };
     }

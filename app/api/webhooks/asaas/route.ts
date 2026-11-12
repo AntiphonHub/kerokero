@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyWebhookToken, parseWebhookEvent } from '@/lib/asaas/webhook';
 import { updateSubscriptionStatus } from '@/lib/appwrite/establishments';
+import { activateSubscriptionAndNotify } from '@/lib/subscriptions/activation';
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,7 +21,7 @@ export async function POST(req: NextRequest) {
     if (subscriptionId) {
       if (isPaymentConfirmed) {
         console.log(`[Webhook Asaas] Pagamento confirmado para assinatura: ${subscriptionId}`);
-        await updateSubscriptionStatus(subscriptionId, 'active');
+        await activateSubscriptionAndNotify(subscriptionId);
       } else if (isPaymentOverdue) {
         console.log(`[Webhook Asaas] Pagamento vencido para assinatura: ${subscriptionId}`);
         await updateSubscriptionStatus(subscriptionId, 'overdue');
