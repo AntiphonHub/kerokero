@@ -44,6 +44,7 @@ import { decryptSecret } from '@/lib/security/encryption';
 import type { EstablishmentDocument } from '@/lib/appwrite/establishments';
 import { isEstablishmentOpen, isHappyHourActive } from '@/lib/utils/operating-hours';
 import { getProductById } from '@/lib/appwrite/products';
+import { isPixPaymentEnabled } from '@/lib/config/payment';
 
 export interface ActionResult<T = unknown> {
   success: boolean;
@@ -462,6 +463,14 @@ export async function requestPixCheckoutAction(
   }>
 > {
   try {
+    if (!isPixPaymentEnabled()) {
+      return {
+        success: false,
+        message:
+          'Pagamento via PIX temporariamente indisponível. Solicite a maquininha de cartão na mesa.',
+      };
+    }
+
     if (!isValidCpf(payerCpf)) {
       return {
         success: false,

@@ -18,6 +18,7 @@ import {
 import { WalletData, getWalletDataAction } from '@/actions/wallet';
 import { AsaasDocumentGroup } from '@/lib/asaas/types';
 import { formatBrasiliaDateTime } from '@/lib/formatters';
+import { AsaasSeal } from '@/components/ui/asaas-seal';
 import { WithdrawDialog } from './withdraw-dialog';
 import { UploadDocumentModal } from './upload-document-modal';
 
@@ -218,21 +219,24 @@ export function WalletView({ initialData }: WalletViewProps) {
             </p>
           </div>
 
-          <div className="mt-6 pt-4 border-t border-zinc-100 space-y-1.5">
-            <div className="text-xs font-medium text-zinc-700">Subconta no Asaas:</div>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-zinc-100 text-zinc-800">
-              {data.subaccountStatus === 'approved' ? (
-                <>
-                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                  <span className="text-emerald-700 font-semibold">Verificada e Aprovada</span>
-                </>
-              ) : (
-                <>
-                  <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
-                  <span className="text-amber-800 font-medium">Validação Pendente</span>
-                </>
-              )}
+          <div className="mt-6 pt-4 border-t border-zinc-100 flex items-center justify-between gap-2">
+            <div className="space-y-1.5">
+              <div className="text-xs font-medium text-zinc-700">Subconta no Asaas:</div>
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-zinc-100 text-zinc-800">
+                {data.subaccountStatus === 'approved' ? (
+                  <>
+                    <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                    <span className="text-emerald-700 font-semibold">Verificada e Aprovada</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+                    <span className="text-amber-800 font-medium">Validação Pendente</span>
+                  </>
+                )}
+              </div>
             </div>
+            <AsaasSeal size="compact" />
           </div>
         </div>
       </div>
@@ -362,6 +366,14 @@ export function WalletView({ initialData }: WalletViewProps) {
             </table>
           </div>
         )}
+      </div>
+
+      {/* Rodapé de Conformidade Regulatória BaaS */}
+      <div className="pt-2 pb-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-zinc-400">
+        <span className="text-[11px] text-center sm:text-left">
+          Serviços financeiros e conta de liquidação prestados por ASAAS GESTÃO FINANCEIRA INSTITUIÇÃO DE PAGAMENTO S.A.
+        </span>
+        <AsaasSeal size="compact" />
       </div>
 
       {/* Modal de Saque */}

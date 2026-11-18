@@ -10,6 +10,7 @@ import { maskCpf } from '@/lib/masks';
 import { Button } from '@/components/ui/button';
 import { ShieldCheck, CheckCircle2, Zap, ArrowRight } from 'lucide-react';
 import { containerVariants, itemVariants } from '@/lib/motion';
+import { AsaasSeal } from '@/components/ui/asaas-seal';
 
 interface StepSubcontaFormProps {
   initialData?: {
@@ -267,22 +268,32 @@ export function StepSubcontaForm({ initialData }: StepSubcontaFormProps) {
                 </span>
               </div>
             </div>
+
+            <div className="pt-3 border-t border-zinc-200/60 flex items-center justify-between gap-2">
+              <span className="text-[11px] text-zinc-500 font-medium">
+                Infraestrutura financeira autorizada:
+              </span>
+              <AsaasSeal size="compact" />
+            </div>
           </div>
         </motion.div>
       </div>
 
       {/* Action Bar */}
-      <motion.div variants={itemVariants} className="pt-6 border-t border-zinc-100 flex items-center justify-between">
-        <Link
-          href="/onboarding/operacao"
-          className="h-12 px-6 rounded-full border border-zinc-200 text-zinc-600 font-semibold text-sm inline-flex items-center justify-center hover:text-zinc-900 hover:border-zinc-900 transition-all"
-        >
-          Voltar
-        </Link>
+      <motion.div variants={itemVariants} className="pt-6 border-t border-zinc-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-3 order-2 sm:order-1 w-full sm:w-auto justify-between sm:justify-start">
+          <Link
+            href="/onboarding/operacao"
+            className="h-12 px-6 rounded-full border border-zinc-200 text-zinc-600 font-semibold text-sm inline-flex items-center justify-center hover:text-zinc-900 hover:border-zinc-900 transition-all"
+          >
+            Voltar
+          </Link>
+          <AsaasSeal size="compact" />
+        </div>
         <Button
           type="submit"
           disabled={isPending}
-          className="h-12 px-7 rounded-full bg-amber-500 text-white font-bold hover:bg-amber-600 shadow-sm shadow-amber-500/25 transition-all cursor-pointer"
+          className="h-12 px-7 rounded-full bg-amber-500 text-white font-bold hover:bg-amber-600 shadow-sm shadow-amber-500/25 transition-all cursor-pointer order-1 sm:order-2 w-full sm:w-auto"
         >
           {isPending ? 'Criando subconta e ativando teste...' : 'Concluir cadastro e iniciar teste grátis'}
         </Button>

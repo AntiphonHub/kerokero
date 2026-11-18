@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { FOOTER_DATA } from '@/lib/landing/cta-data';
+import { AsaasSeal } from '@/components/ui/asaas-seal';
 
 export function LandingFooter() {
   return (
@@ -40,19 +41,25 @@ export function LandingFooter() {
         </div>
 
         {/* Linha Divisória Sutil e Identificação Fiscal (Lei do E-commerce) */}
-        <div className="mt-8 pt-6 border-t border-neutral-900/80 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] sm:text-xs text-neutral-400 font-light text-center sm:text-left">
-          <p>
-            {FOOTER_DATA.brand} é operado por {FOOTER_DATA.companyName} · CNPJ: {FOOTER_DATA.cnpj}
-          </p>
-          <p>
-            Contato:{' '}
-            <a
-              href={`mailto:${FOOTER_DATA.contactEmail}`}
-              className="text-neutral-400 hover:text-amber-400 transition-colors underline-offset-2 hover:underline"
-            >
-              {FOOTER_DATA.contactEmail}
-            </a>
-          </p>
+        <div className="mt-8 pt-6 border-t border-neutral-900/80 flex flex-col md:flex-row items-center justify-between gap-4 text-[11px] sm:text-xs text-neutral-400 font-light text-center md:text-left">
+          <div className="space-y-1">
+            <p>
+              {FOOTER_DATA.brand} é operado por {FOOTER_DATA.companyName} · CNPJ: {FOOTER_DATA.cnpj}
+            </p>
+            <p>
+              Contato:{' '}
+              <a
+                href={`mailto:${FOOTER_DATA.contactEmail}`}
+                className="text-neutral-400 hover:text-amber-400 transition-colors underline-offset-2 hover:underline"
+              >
+                {FOOTER_DATA.contactEmail}
+              </a>
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 bg-white/95 px-3 py-1.5 rounded-xl border border-white/20">
+            <AsaasSeal size="compact" />
+          </div>
         </div>
       </div>
     </footer>

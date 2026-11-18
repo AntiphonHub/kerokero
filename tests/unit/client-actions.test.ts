@@ -404,6 +404,17 @@ describe('Client Server Actions', () => {
   describe('requestPixCheckoutAction', () => {
     const validCpf = '52998224725'; // CPF válido matemático
 
+    beforeEach(() => {
+      process.env.NEXT_PUBLIC_ENABLE_PIX_PAYMENT = 'true';
+    });
+
+    it('rejects when PIX is disabled by feature flag', async () => {
+      process.env.NEXT_PUBLIC_ENABLE_PIX_PAYMENT = 'false';
+      const res = await requestPixCheckoutAction('my_items', validCpf);
+      expect(res.success).toBe(false);
+      expect(res.message).toMatch(/indisponível|maquininha/i);
+    });
+
     it('rejects invalid CPF', async () => {
       const res = await requestPixCheckoutAction('my_items', '111.111.111-11');
       expect(res.success).toBe(false);

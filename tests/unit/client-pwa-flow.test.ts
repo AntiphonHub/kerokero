@@ -216,6 +216,7 @@ describe('Client PWA Orders & PIX End-to-End Integration Flow', () => {
   };
 
   beforeEach(() => {
+    process.env.NEXT_PUBLIC_ENABLE_PIX_PAYMENT = 'true';
     vi.clearAllMocks();
     clientCookies.carlos.clear();
     clientCookies.ana.clear();

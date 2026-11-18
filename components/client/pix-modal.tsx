@@ -16,6 +16,7 @@ import {
   PIX_MODE_DETAILS,
   type PixPaymentMode,
 } from '@/lib/utils/pix';
+import { isPixPaymentEnabled } from '@/lib/config/payment';
 import {
   X,
   QrCode,
@@ -30,6 +31,7 @@ import {
   Clock,
   ArrowLeft,
 } from 'lucide-react';
+import { AsaasSeal } from '@/components/ui/asaas-seal';
 
 export interface PixModalProps {
   isOpen: boolean;
@@ -89,10 +91,13 @@ function PixModalInner({
   const [step, setStep] = useState<
     'mode_select' | 'payment_method' | 'cpf_input' | 'qr_code' | 'card_requested'
   >('mode_select');
+  const pixEnabled = isPixPaymentEnabled();
   const [selectedMode, setSelectedMode] = useState<PixPaymentMode>(() =>
     getInitialPixMode(initialMode, amounts),
   );
-  const [paymentMethod, setPaymentMethod] = useState<'pix' | 'card'>('pix');
+  const [paymentMethod, setPaymentMethod] = useState<'pix' | 'card'>(() =>
+    pixEnabled ? 'pix' : 'card',
+  );
   const [cardType, setCardType] = useState<'Crédito' | 'Débito' | 'Refeição / VR'>('Crédito');
   const [isCallingWaiter, setIsCallingWaiter] = useState(false);
   const [cpf, setCpf] = useState('');
@@ -310,7 +315,7 @@ function PixModalInner({
               </span>
               <h2 id="pix-modal-title" className="text-base font-bold text-zinc-900 tracking-tight">
                 {step === 'mode_select' && 'Pagar comanda'}
-                {step === 'payment_method' && 'Forma de Pagamento'}
+                {step === 'payment_method' && (pixEnabled ? 'Forma de Pagamento' : 'Maquininha de Cartão')}
                 {step === 'cpf_input' && 'Pagamento via PIX'}
                 {step === 'qr_code' && 'Aguardando Pagamento'}
                 {step === 'card_requested' && 'Solicitação Enviada'}
@@ -427,89 +432,107 @@ function PixModalInner({
                 </span>
               </div>
 
-              <p className="text-xs text-zinc-600">
-                Selecione como deseja efetuar o pagamento:
-              </p>
+              {pixEnabled ? (
+                <>
+                  <p className="text-xs text-zinc-600">
+                    Selecione como deseja efetuar o pagamento:
+                  </p>
 
-              <div className="space-y-2.5">
-                {/* Opção 1: PIX */}
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod('pix')}
-                  className={`w-full p-3.5 rounded-2xl border text-left transition-all flex items-center justify-between gap-3 min-h-[56px] ${
-                    paymentMethod === 'pix'
-                      ? 'border-amber-500 bg-amber-50/30 ring-1 ring-amber-500 shadow-2xs'
-                      : 'border-zinc-200/80 bg-white hover:border-zinc-300 hover:bg-zinc-50/50'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`size-10 rounded-xl flex items-center justify-center shrink-0 ${
+                  <div className="space-y-2.5">
+                    {/* Opção 1: PIX */}
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod('pix')}
+                      className={`w-full p-3.5 rounded-2xl border text-left transition-all flex items-center justify-between gap-3 min-h-[56px] ${
                         paymentMethod === 'pix'
-                          ? 'bg-amber-500 text-zinc-950 font-bold'
-                          : 'bg-zinc-100 text-zinc-600'
+                          ? 'border-amber-500 bg-amber-50/30 ring-1 ring-amber-500 shadow-2xs'
+                          : 'border-zinc-200/80 bg-white hover:border-zinc-300 hover:bg-zinc-50/50'
                       }`}
                     >
-                      <QrCode className="size-5" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-bold text-zinc-900 block leading-tight">
-                          PIX
-                        </span>
-                        <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded-full border border-emerald-200">
-                          Instantâneo
-                        </span>
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`size-10 rounded-xl flex items-center justify-center shrink-0 ${
+                            paymentMethod === 'pix'
+                              ? 'bg-amber-500 text-zinc-950 font-bold'
+                              : 'bg-zinc-100 text-zinc-600'
+                          }`}
+                        >
+                          <QrCode className="size-5" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-bold text-zinc-900 block leading-tight">
+                              PIX
+                            </span>
+                            <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded-full border border-emerald-200">
+                              Instantâneo
+                            </span>
+                          </div>
+                          <span className="text-[11px] text-zinc-500 block mt-0.5 leading-snug">
+                            QR Code e Copia-e-Cola direto no celular
+                          </span>
+                        </div>
                       </div>
-                      <span className="text-[11px] text-zinc-500 block mt-0.5 leading-snug">
-                        QR Code e Copia-e-Cola direto no celular
+
+                      <span className="size-4 rounded-full border border-zinc-300 flex items-center justify-center shrink-0">
+                        {paymentMethod === 'pix' && <span className="size-2 rounded-full bg-amber-500" />}
                       </span>
-                    </div>
-                  </div>
+                    </button>
 
-                  <span className="size-4 rounded-full border border-zinc-300 flex items-center justify-center shrink-0">
-                    {paymentMethod === 'pix' && <span className="size-2 rounded-full bg-amber-500" />}
-                  </span>
-                </button>
-
-                {/* Opção 2: Maquininha */}
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod('card')}
-                  className={`w-full p-3.5 rounded-2xl border text-left transition-all flex items-center justify-between gap-3 min-h-[56px] ${
-                    paymentMethod === 'card'
-                      ? 'border-amber-500 bg-amber-50/30 ring-1 ring-amber-500 shadow-2xs'
-                      : 'border-zinc-200/80 bg-white hover:border-zinc-300 hover:bg-zinc-50/50'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`size-10 rounded-xl flex items-center justify-center shrink-0 ${
+                    {/* Opção 2: Maquininha */}
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod('card')}
+                      className={`w-full p-3.5 rounded-2xl border text-left transition-all flex items-center justify-between gap-3 min-h-[56px] ${
                         paymentMethod === 'card'
-                          ? 'bg-zinc-900 text-white font-bold'
-                          : 'bg-zinc-100 text-zinc-600'
+                          ? 'border-amber-500 bg-amber-50/30 ring-1 ring-amber-500 shadow-2xs'
+                          : 'border-zinc-200/80 bg-white hover:border-zinc-300 hover:bg-zinc-50/50'
                       }`}
                     >
-                      <CreditCard className="size-5" />
-                    </div>
-                    <div>
-                      <span className="text-xs font-bold text-zinc-900 block leading-tight">
-                        Maquininha de Cartão
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`size-10 rounded-xl flex items-center justify-center shrink-0 ${
+                            paymentMethod === 'card'
+                              ? 'bg-zinc-900 text-white font-bold'
+                              : 'bg-zinc-100 text-zinc-600'
+                          }`}
+                        >
+                          <CreditCard className="size-5" />
+                        </div>
+                        <div>
+                          <span className="text-xs font-bold text-zinc-900 block leading-tight">
+                            Maquininha de Cartão
+                          </span>
+                          <span className="text-[11px] text-zinc-500 block mt-0.5 leading-snug">
+                            Chamar garçom na mesa com a maquininha
+                          </span>
+                        </div>
+                      </div>
+
+                      <span className="size-4 rounded-full border border-zinc-300 flex items-center justify-center shrink-0">
+                        {paymentMethod === 'card' && <span className="size-2 rounded-full bg-zinc-900" />}
                       </span>
-                      <span className="text-[11px] text-zinc-500 block mt-0.5 leading-snug">
-                        Chamar garçom na mesa com a maquininha
-                      </span>
-                    </div>
+                    </button>
                   </div>
+                </>
+              ) : (
+                <div className="p-3.5 rounded-2xl border border-zinc-200/80 bg-zinc-50/60 flex items-start gap-3">
+                  <div className="size-10 rounded-xl bg-zinc-900 text-white flex items-center justify-center shrink-0 mt-0.5">
+                    <CreditCard className="size-5" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-zinc-900 block leading-tight">
+                      Maquininha na Mesa
+                    </span>
+                    <span className="text-[11px] text-zinc-500 block mt-1 leading-relaxed">
+                      Um atendente virá até a sua mesa com a maquininha de cartão para efetuar a cobrança.
+                    </span>
+                  </div>
+                </div>
+              )}
 
-                  <span className="size-4 rounded-full border border-zinc-300 flex items-center justify-center shrink-0">
-                    {paymentMethod === 'card' && <span className="size-2 rounded-full bg-zinc-900" />}
-                  </span>
-                </button>
-              </div>
-
-              {/* Se Maquininha selecionada: tipo de cartão */}
-              {paymentMethod === 'card' && (
+              {/* Se Maquininha selecionada (ou se PIX estiver desabilitado): tipo de cartão */}
+              {(paymentMethod === 'card' || !pixEnabled) && (
                 <div className="pt-2 space-y-2 animate-in fade-in duration-200">
                   <span className="text-[11px] font-semibold text-zinc-500 block">
                     Modalidade no cartão:
@@ -542,7 +565,7 @@ function PixModalInner({
 
               {/* Botão de Ação */}
               <div className="pt-2">
-                {paymentMethod === 'pix' ? (
+                {pixEnabled && paymentMethod === 'pix' ? (
                   <button
                     type="button"
                     onClick={() => setStep('cpf_input')}
@@ -752,6 +775,14 @@ function PixModalInner({
                 <span className="size-2 rounded-full bg-amber-500 animate-ping" />
                 <span className="font-medium">
                   Aguardando confirmação do banco...
+                </span>
+              </div>
+
+              {/* Selo Regulatório BaaS Asaas */}
+              <div className="pt-2 flex flex-col items-center justify-center gap-1">
+                <AsaasSeal size="xs" align="center" />
+                <span className="text-[10px] text-zinc-400">
+                  Processamento financeiro autorizado por Asaas IP S.A.
                 </span>
               </div>
             </div>
